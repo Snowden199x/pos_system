@@ -291,8 +291,13 @@ body {
     display: flex;
     flex-direction: column;
     padding: 18px 18px 16px;
-    overflow-y: auto;
     gap: 14px;
+
+    border-radius: var(--radius-lg);
+    margin: 16px; /* para may space paligid */
+    box-shadow: var(--shadow-md);
+
+    overflow: hidden;
 }
 
 /* Dine In / Take Out */
@@ -370,6 +375,8 @@ body {
 
 .order-items-section {
     flex: 1;
+    display: flex;
+    flex-direction: column;
     min-height: 0;
 }
 
@@ -377,9 +384,10 @@ body {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    max-height: 240px;
+    
     overflow-y: auto;
-    padding-right: 2px;
+    flex: 1;
+    min-height: 0px;
 }
 
 .order-items-list::-webkit-scrollbar {
@@ -524,6 +532,7 @@ body {
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     padding: 14px 14px 10px;
+    flex-shrink: 0;
 }
 
 .payment-summary__title {
