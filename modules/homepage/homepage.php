@@ -9,15 +9,15 @@ $base_url = '/2ndYearSystem/POS_SYSTEM/';
 $current_page = isset($_GET['page']) ? $_GET['page'] : 'home';
 
 $menu_items = [
-    ['id' => 1, 'name' => 'Eruption',          'price' => 229, 'category' => 'sushi', 'image' => 'assets/images/eruption.jpg'],
-    ['id' => 2, 'name' => 'Cheesy Shrimp Bomb', 'price' => 169, 'category' => 'sushi', 'image' => 'assets/images/cheesy-shrimp-bomb.jpg'],
-    ['id' => 3, 'name' => 'Crazy Crab',          'price' => 158, 'category' => 'sushi', 'image' => 'assets/images/crazy-crab.jpg'],
-    ['id' => 4, 'name' => 'Tori Floss Maki',     'price' => 149, 'category' => 'sushi', 'image' => 'assets/images/tori-floss-maki.jpg'],
-    ['id' => 5, 'name' => 'Ebi Tempura Roll',    'price' => 149, 'category' => 'sushi', 'image' => 'assets/images/ebi-tempura-roll.jpg'],
-    ['id' => 6, 'name' => 'Mango Craze',         'price' => 139, 'category' => 'sushi', 'image' => 'assets/images/mango-craze.jpg'],
-    ['id' => 7, 'name' => 'Carbonara',           'price' => 185, 'category' => 'pasta', 'image' => 'assets/images/carbonara.jpg'],
-    ['id' => 8, 'name' => 'Bolognese',           'price' => 175, 'category' => 'pasta', 'image' => 'assets/images/bolognese.jpg'],
-    ['id' => 9, 'name' => 'Aglio e Olio',        'price' => 155, 'category' => 'pasta', 'image' => 'assets/images/aglio-olio.jpg'],
+    ['id' => 1, 'name' => 'Eruption',          'price' => 229, 'category' => 'sushi', 'image' => 'assets/images/eruption.png'],
+    ['id' => 2, 'name' => 'Cheesy Shrimp Bomb', 'price' => 169, 'category' => 'sushi', 'image' => 'assets/images/cheesyshrimp.png'],
+    ['id' => 3, 'name' => 'Crazy Crab',          'price' => 158, 'category' => 'sushi', 'image' => 'assets/images/crazycrab.png'],
+    ['id' => 4, 'name' => 'Tori Floss Maki',     'price' => 149, 'category' => 'sushi', 'image' => 'assets/images/torifloss.png'],
+    ['id' => 5, 'name' => 'Ebi Tempura Roll',    'price' => 149, 'category' => 'sushi', 'image' => 'assets/images/ebitemp.png'],
+    ['id' => 6, 'name' => 'Mango Craze',         'price' => 139, 'category' => 'sushi', 'image' => 'assets/images/mangocraze.png'],
+    ['id' => 7, 'name' => 'Carbonara',           'price' => 185, 'category' => 'pasta', 'image' => 'assets/images/carbonara.png'],
+    ['id' => 8, 'name' => 'Bolognese',           'price' => 175, 'category' => 'pasta', 'image' => 'assets/images/bolognese.png'],
+    ['id' => 9, 'name' => 'Aglio e Olio',        'price' => 155, 'category' => 'pasta', 'image' => 'assets/images/aglio-olio.png'],
 ];
 ?>
 <!DOCTYPE html>
