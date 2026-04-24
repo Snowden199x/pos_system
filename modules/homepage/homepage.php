@@ -5,10 +5,12 @@ if (!isset($_SESSION["logged_in"])) {
     exit();
 }
 
-$base_url = '/2ndYearSystem/POS_SYSTEM/';
+$base_url = '/Github/POS_SYSTEM/';
 $current_page = isset($_GET['page']) ? $_GET['page'] : 'home';
 
-$menu_items = [
+require_once __DIR__ . '/../../db/connection.php';
+$stmt = $pdo->query("SELECT * FROM menu_items");
+$menu_items = $stmt->fetchAll(PDO::FETCH_ASSOC); [
     ['id' => 1, 'name' => 'Eruption',          'price' => 229, 'category' => 'sushi', 'image' => 'assets/images/eruption.png'],
     ['id' => 2, 'name' => 'Cheesy Shrimp Bomb', 'price' => 169, 'category' => 'sushi', 'image' => 'assets/images/cheesyshrimp.png'],
     ['id' => 3, 'name' => 'Crazy Crab',          'price' => 158, 'category' => 'sushi', 'image' => 'assets/images/crazycrab.png'],
