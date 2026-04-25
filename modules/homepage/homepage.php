@@ -5,21 +5,19 @@ if (!isset($_SESSION["logged_in"])) {
     exit();
 }
 
-$base_url = '/Github/POS_SYSTEM/';
+$base_url = '/POS_SYSTEM/';
 $current_page = isset($_GET['page']) ? $_GET['page'] : 'home';
 
-require_once __DIR__ . '/../../db/connection.php';
-$stmt = $pdo->query("SELECT * FROM menu_items");
-$menu_items = $stmt->fetchAll(PDO::FETCH_ASSOC); [
-    ['id' => 1, 'name' => 'Eruption',          'price' => 229, 'category' => 'sushi', 'image' => 'assets/images/eruption.png'],
-    ['id' => 2, 'name' => 'Cheesy Shrimp Bomb', 'price' => 169, 'category' => 'sushi', 'image' => 'assets/images/cheesyshrimp.png'],
-    ['id' => 3, 'name' => 'Crazy Crab',          'price' => 158, 'category' => 'sushi', 'image' => 'assets/images/crazycrab.png'],
-    ['id' => 4, 'name' => 'Tori Floss Maki',     'price' => 149, 'category' => 'sushi', 'image' => 'assets/images/torifloss.png'],
-    ['id' => 5, 'name' => 'Ebi Tempura Roll',    'price' => 149, 'category' => 'sushi', 'image' => 'assets/images/ebitemp.png'],
-    ['id' => 6, 'name' => 'Mango Craze',         'price' => 139, 'category' => 'sushi', 'image' => 'assets/images/mangocraze.png'],
-    ['id' => 7, 'name' => 'Carbonara',           'price' => 185, 'category' => 'pasta', 'image' => 'assets/images/carbonara.png'],
-    ['id' => 8, 'name' => 'Bolognese',           'price' => 175, 'category' => 'pasta', 'image' => 'assets/images/bolognese.png'],
-    ['id' => 9, 'name' => 'Aglio e Olio',        'price' => 155, 'category' => 'pasta', 'image' => 'assets/images/aglio-olio.png'],
+$menu_items = [
+    ['id' => 1, 'name' => 'Eruption',           'price' => 229, 'category' => 'sushi', 'image' => 'assets/images/eruption.png'],
+    ['id' => 2, 'name' => 'Cheesy Shrimp Bomb',  'price' => 169, 'category' => 'sushi', 'image' => 'assets/images/cheesyshrimp.png'],
+    ['id' => 3, 'name' => 'Crazy Crab',           'price' => 159, 'category' => 'sushi', 'image' => 'assets/images/crazycrab.png'],
+    ['id' => 4, 'name' => 'Tori Floss Maki',      'price' => 149, 'category' => 'sushi', 'image' => 'assets/images/torifloss.png'],
+    ['id' => 5, 'name' => 'Ebi Tempura Roll',     'price' => 149, 'category' => 'sushi', 'image' => 'assets/images/ebitemp.png'],
+    ['id' => 6, 'name' => 'Mango Craze',          'price' => 139, 'category' => 'sushi', 'image' => 'assets/images/mangocraze.png'],
+    ['id' => 7, 'name' => 'Creamy Jalapeño',      'price' => 179, 'category' => 'pasta', 'image' => 'assets/images/jalapeno.png'],
+    ['id' => 8, 'name' => 'Creamy Carbonara',     'price' => 169, 'category' => 'pasta', 'image' => 'assets/images/carbonara.png'],
+    ['id' => 9, 'name' => 'Creamy Tuna Pesto',    'price' => 169, 'category' => 'pasta', 'image' => 'assets/images/tunapesto.png'],
 ];
 
 // Discount map: price => fixed discount (floor of 20%)
