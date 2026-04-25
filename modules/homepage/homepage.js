@@ -94,9 +94,8 @@
                 <span class="qty-num">${item.qty}</span>
                 <button class="qty-btn" data-action="inc" aria-label="Increase">+</button>
             </div>
-            <span class="order-item__price">Php ${lineTotal}</span>
             <button class="order-item__remove" aria-label="Remove item">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
             </button>

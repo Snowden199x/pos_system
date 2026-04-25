@@ -1,6 +1,14 @@
 <?php
 session_start();
 
+// Handle logout
+if (isset($_GET['logout'])) {
+    session_unset();
+    session_destroy();
+    header("Location: index.php");
+    exit();
+}
+
 $valid_username = "admin";
 $valid_password = "password123";
 
