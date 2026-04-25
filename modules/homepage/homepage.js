@@ -188,8 +188,13 @@
     let summary = `✅ Order placed!\n`;
     summary += `Type: ${state.orderType === "dine-in" ? "Dine In" : "Take Out"} | Beeper: ${beeper}\n`;
     summary += `Payment: ${state.paymentMethod === "cash" ? "Cash" : "GCash"}\n`;
+    summary += `Subtotal: Php ${subtotal.toFixed(2)}\n`;
+    if (state.discountEnabled) {
+      summary += `Discount (10%): −Php ${discount.toFixed(2)}\n`;
+    }
     summary += `Total: Php ${total.toFixed(2)}`;
-    if (state.paymentMethod === "cash" && amount > 0) {
+    if (state.paymentMethod === "cash") {
+      summary += `\nCash: Php ${amount.toFixed(2)}`;
       summary += `\nChange: Php ${change.toFixed(2)}`;
     }
 
@@ -205,6 +210,7 @@
         subtotal: subtotal,
         discount: discount,
         total: total,
+        change_amount: change,
         items: state.order,
       }),
     })
