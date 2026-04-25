@@ -27,6 +27,29 @@
     const changeAmount   = document.getElementById('change-amount');
     const toastContainer = document.getElementById('toast-container');
 
+    // ── Profile Dropdown & Logout ──────────────────────────────────────────
+    const profileBtn      = document.getElementById('profile-btn');
+    const profileDropdown = document.getElementById('profile-dropdown');
+    const logoutBtn       = document.getElementById('logout-btn');
+
+    if (profileBtn) {
+        profileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileDropdown.classList.toggle('open');
+        });
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', () => {
+        if (profileDropdown) profileDropdown.classList.remove('open');
+    });
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            window.location.href = '/POS_SYSTEM/index.php?logout=1';
+        });
+    }
+
     // ── Date/Time Clock ────────────────────────────────────────────────────
     function updateClock() {
         const now  = new Date();
