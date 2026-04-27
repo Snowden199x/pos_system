@@ -5,7 +5,7 @@ if (!isset($_SESSION["logged_in"])) {
     exit();
 }
 
-$base_url = '/POS_SYSTEM/';
+$base_url = '/Github/POS_SYSTEM/';
 $current_page = isset($_GET['page']) ? $_GET['page'] : 'home';
 
 $menu_items = [
