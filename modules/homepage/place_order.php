@@ -12,6 +12,13 @@ if (!$data || empty($data['items'])) {
 }
 
 try {
+    $beeperCheck = $pdo->prepare("SELECT id FROM orders WHERE beeper_number = ? AND status = 'pending'");
+    $beeperCheck->execute([$data['beeper_number']]);
+    if ($beeperCheck->fetch()) {
+        echo json_encode(['success' => false, 'message' => 'beeper_in_use']);
+        exit();
+    }
+
     $pdo->beginTransaction();
 
     // Insert order
