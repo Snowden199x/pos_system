@@ -103,7 +103,7 @@ $orders = $stmt->fetchAll();
         <div class="order-card" data-id="<?= $o['id'] ?>" data-type="<?= htmlspecialchars($type) ?>">
 
             <div class="order-top">
-                <span class="order-id">#<?= $o['beeper_number'] ?></span>
+                <span class="order-id" data-beeper="<?= $o['beeper_number'] ?>">#<?= $o['beeper_number'] ?></span>
                 <span class="badge <?= $badgeClass ?>"><?= $typeLabel ?></span>
             </div>
 

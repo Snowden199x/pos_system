@@ -370,8 +370,14 @@
         })
         .then(r => r.json())
         .then(data => {
+            if (!data.success && data.message === 'beeper_in_use') {
+                showToast('Beeper number is currently in use.', 'error');
+                placeOrderBtn.disabled = false;
+                updateTotals();
+                return;
+            }
             if (data.success) {
-                showToast(`✅ Order #${String(data.order_id).padStart(4,'0')} placed!`, 'success');
+                showToast('Order has been placed!', 'success');
 
                 // Reset
                 state.order          = [];

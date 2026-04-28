@@ -9,9 +9,24 @@
         document.querySelectorAll('.filter').forEach(btn => btn.classList.remove('active'));
         if (el) el.classList.add('active');
 
+        const val = searchInput ? searchInput.value.trim() : '';
         let visible = 0;
+
         document.querySelectorAll('.order-card').forEach(card => {
-            const match = type === 'all' || card.dataset.type === type;
+            const beeper   = (card.querySelector('.order-id')?.dataset.beeper || '').trim();
+            const items    = (card.querySelector('.order-items')?.textContent || '').toLowerCase();
+            const payment  = (card.querySelector('.extra-row span:last-child')?.textContent || '').toLowerCase();
+            const date     = (card.querySelector('.time')?.textContent || '').toLowerCase();
+            const type     = (card.dataset.type || '').toLowerCase();
+            const typeMatch   = currentFilter === 'all' || card.dataset.type === currentFilter;
+            const searchMatch = val === '' 
+                || beeper === val 
+                || items.includes(val.toLowerCase())
+                || payment.includes(val.toLowerCase())
+                || date.includes(val.toLowerCase())
+                || type.includes(val.toLowerCase());
+            const match = typeMatch && searchMatch;
+
             card.style.display = match ? 'flex' : 'none';
             if (match) visible++;
         });
@@ -77,13 +92,15 @@
     const searchInput = document.getElementById('orderSearch');
     if (searchInput) {
         searchInput.addEventListener('input', function () {
-            const val = this.value.toLowerCase().trim();
+            const val = this.value.trim();
             let visible = 0;
 
             document.querySelectorAll('.order-card').forEach(card => {
-                const beeper = (card.querySelector('.order-id')?.textContent || '').toLowerCase();
+                const beeper = (card.querySelector('.order-id')?.textContent || '').replace('#','').trim();
                 const items  = (card.querySelector('.order-items')?.textContent || '').toLowerCase();
-                const match  = beeper.includes(val) || items.includes(val);
+                const typeMatch = currentFilter === 'all' || card.dataset.type === currentFilter;
+                const searchMatch = val === '' || beeper === val || items.includes(val.toLowerCase());
+                const match = typeMatch && searchMatch;
 
                 card.style.display = match ? 'flex' : 'none';
                 if (match) visible++;
