@@ -14,17 +14,16 @@
 
         document.querySelectorAll('.order-card').forEach(card => {
             const beeper   = (card.querySelector('.order-id')?.dataset.beeper || '').trim();
-            const items    = (card.querySelector('.order-items')?.textContent || '').toLowerCase();
+            const items = Array.from(card.querySelectorAll('.order-row span:first-child'))
+                .map(el => el.textContent.toLowerCase().replace(/^\d+x\s*/i, ''))
+                .join(' ');
             const payment  = (card.querySelector('.extra-row span:last-child')?.textContent || '').toLowerCase();
             const date     = (card.querySelector('.time')?.textContent || '').toLowerCase();
             const type     = (card.dataset.type || '').toLowerCase();
             const typeMatch   = currentFilter === 'all' || card.dataset.type === currentFilter;
             const searchMatch = val === '' 
-                || beeper === val 
-                || items.includes(val.toLowerCase())
-                || payment.includes(val.toLowerCase())
-                || date.includes(val.toLowerCase())
-                || type.includes(val.toLowerCase());
+                || beeper === val
+                || items.includes(val.toLowerCase());
             const match = typeMatch && searchMatch;
 
             card.style.display = match ? 'flex' : 'none';
@@ -91,23 +90,27 @@
     // ── SEARCH ─────────────────────────────────────────────
     const searchInput = document.getElementById('orderSearch');
     if (searchInput) {
-        searchInput.addEventListener('input', function () {
-            const val = this.value.trim();
-            let visible = 0;
+    searchInput.addEventListener('input', function () {
+    const val = this.value.trim().toLowerCase();
+    let visible = 0;
 
-            document.querySelectorAll('.order-card').forEach(card => {
-                const beeper = (card.querySelector('.order-id')?.textContent || '').replace('#','').trim();
-                const items  = (card.querySelector('.order-items')?.textContent || '').toLowerCase();
-                const typeMatch = currentFilter === 'all' || card.dataset.type === currentFilter;
-                const searchMatch = val === '' || beeper === val || items.includes(val.toLowerCase());
-                const match = typeMatch && searchMatch;
+    document.querySelectorAll('.order-card').forEach(card => {
+        const beeper = (card.querySelector('.order-id')?.dataset.beeper || '').trim();
+        const items = Array.from(card.querySelectorAll('.order-row span:first-child'))
+                .map(el => el.textContent.toLowerCase().replace(/^\d+x\s*/i, ''))
+                .join(' ');
+        const typeMatch   = currentFilter === 'all' || card.dataset.type === currentFilter;
+        const searchMatch = val === '' 
+            || beeper === val    // ← beeper number
+            || items.includes(val);    // ← item names
+        const match = typeMatch && searchMatch;
 
-                card.style.display = match ? 'flex' : 'none';
-                if (match) visible++;
-            });
+        card.style.display = match ? 'flex' : 'none';
+        if (match) visible++;
+    });
 
-            showEmpty(visible === 0);
-        });
+    showEmpty(visible === 0);
+});
     }
 
     // ── PROFILE DROPDOWN ───────────────────────────────────
