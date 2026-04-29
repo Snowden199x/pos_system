@@ -1,30 +1,32 @@
 <?php
 session_start();
 
+// Handle logout
+if (isset($_GET['logout'])) {
+    session_unset();
+    session_destroy();
+    header("Location: index.php");
+    exit();
+}
+
 $valid_username = "admin";
 $valid_password = "password123";
 
 $error = "";
 
-// If already logged in, route to the correct page
+// If already logged in
 if (isset($_SESSION["logged_in"])) {
-    $page = isset($_GET['page']) ? $_GET['page'] : 'home';
+    $page = $_GET['page'] ?? 'home';
 
-    if ($page === 'home') {
-        include 'modules/homepage/homepage.php';
-    } elseif ($page === 'orders') {
-        include 'modules/orders/orders.php';
-    } elseif ($page === 'served') {
-        include 'modules/served/served.php';
-    } elseif ($page === 'statistics') {
-        include 'modules/statistics/statistics.php';
-    } else {
-        include 'modules/homepage/homepage.php';
-    }
+    if ($page === 'home') include 'modules/homepage/homepage.php';
+    elseif ($page === 'orders') include 'modules/orders/orders.php';
+    elseif ($page === 'served') include 'modules/served/served.php';
+    elseif ($page === 'statistics') include 'modules/statistics/statistics.php';
+    else include 'modules/homepage/homepage.php';
     exit();
 }
 
-// Handle login form submission
+// Login
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $username = trim($_POST["username"] ?? "");
     $password = trim($_POST["password"] ?? "");
@@ -32,7 +34,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if ($username === $valid_username && $password === $valid_password) {
         $_SESSION["logged_in"] = true;
         $_SESSION["username"] = $username;
-
         header("Location: index.php?page=home");
         exit();
     } else {
@@ -43,140 +44,198 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twist &amp; Roll — Login</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
-    <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Twist & Roll — Login</title>
 
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background: #F5F3E8;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
 
-        .login-card {
-            background: #fff;
-            border: 1px solid #D8D4C0;
-            border-radius: 16px;
-            padding: 40px 36px;
-            width: 100%;
-            max-width: 360px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 24px;
-        }
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .login-logo {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            border: 2px solid #D8D4C0;
-            object-fit: cover;
-            background: #EAE8D6;
-        }
+body {
+    font-family: 'DM Sans', sans-serif;
+    background: #FEFCE0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-        .login-title {
-            font-family: 'DM Serif Display', serif;
-            font-size: 24px;
-            color: #2C2C1A;
-            text-align: center;
-        }
+/* CARD */
+.login-card {
+    background: #FEFCE0;
+    border: 1px solid #e0ddce;
+    border-radius: 40px;
+    padding: 40px 36px;
+    width: 100%;
+    max-width: 360px;
+    box-shadow: 
+        0 10px 25px rgba(0,0,0,0.05),
+        0 0 50px rgba(216,195,111,0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+}
 
-        .login-form {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
+/* LOGO */
+.login-logo {
+    max-width: 180px;
+    height: auto;
+}
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
+/* FORM */
+.login-form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
 
-        label {
-            font-size: 13px;
-            font-weight: 500;
-            color: #7A7A5A;
-        }
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
 
-        input[type="text"],
-        input[type="password"] {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1px solid #D8D4C0;
-            border-radius: 8px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 14px;
-            color: #2C2C1A;
-            background: #FAFAF2;
-            outline: none;
-            transition: border-color 0.18s;
-        }
+label {
+    font-size: 13px;
+    color: #7A7A5A;
+}
 
-        input:focus {
-            border-color: #C8A84B;
-        }
+/* INPUT */
+input[type="text"],
+input[type="password"] {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #dbd8c8;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #2C2C1A;
+    background: #F3F2D7;
+    outline: none;
+}
 
-        .error-msg {
-            font-size: 13px;
-            color: #C0392B;
-            background: #fde8e8;
-            border-radius: 6px;
-            padding: 8px 12px;
-            text-align: center;
-            width: 100%;
-        }
+/* Autofill fix */
+input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px #F3F2D7 inset !important;
+    -webkit-text-fill-color: #2C2C1A !important;
+}
 
-        .login-btn {
-            width: 100%;
-            padding: 12px;
-            background: #2D6A4F;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.18s;
-            margin-top: 4px;
-        }
+input:focus {
+    border-color: #C8A84B;
+}
 
-        .login-btn:hover { background: #245a42; }
-    </style>
+/* PASSWORD */
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrapper input {
+    padding-right: 40px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+/* BUTTON */
+.login-btn {
+    width: 100%;
+    padding: 12px;
+    background: #1C3924;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.login-btn:hover {
+    background: #245a42;
+}
+
+/* ERROR */
+.error-msg {
+    font-size: 13px;
+    color: #C0392B;
+    background: #fde8e8;
+    border-radius: 6px;
+    padding: 8px 12px;
+    text-align: center;
+    width: 100%;
+}
+</style>
 </head>
+
 <body>
 
 <div class="login-card">
-    <img src="assets/images/logo.png" alt="Twist &amp; Roll" class="login-logo"
-         onerror="this.style.display='none'">
-    <h1 class="login-title">Twist &amp; Roll POS</h1>
+    <img src="assets/images/logo.png" class="login-logo">
 
     <?php if ($error): ?>
         <p class="error-msg"><?= htmlspecialchars($error) ?></p>
     <?php endif; ?>
 
-    <form class="login-form" method="POST" action="">
+    <form class="login-form" method="POST">
         <div class="form-group">
-            <label for="username">Username</label>
-            <input type="text" id="username" name="username" required autocomplete="username">
+            <label>Username</label>
+            <input type="text" name="username" required>
         </div>
+
         <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" required autocomplete="current-password">
+            <label>Password</label>
+            <div class="password-wrapper">
+                <input type="password" id="password" name="password" required>
+
+                <span class="toggle-password" onclick="togglePassword()">
+
+                    <!-- OPEN EYE -->
+                    <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="#7A7A5A" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+
+                    <!-- CLOSED EYE -->
+                    <svg id="eyeClosed" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="#7A7A5A" stroke-width="2" viewBox="0 0 24 24" style="display:none;">
+                        <path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a21.77 21.77 0 0 1 5.06-5.94"/>
+                        <path d="M1 1l22 22"/>
+                    </svg>
+
+                </span>
+            </div>
         </div>
+
         <button type="submit" class="login-btn">Login</button>
     </form>
 </div>
+
+<script>
+function togglePassword() {
+    const password = document.getElementById("password");
+    const eyeOpen = document.getElementById("eyeOpen");
+    const eyeClosed = document.getElementById("eyeClosed");
+
+    if (password.type === "password") {
+        password.type = "text";
+        eyeOpen.style.display = "none";
+        eyeClosed.style.display = "inline";
+    } else {
+        password.type = "password";
+        eyeOpen.style.display = "inline";
+        eyeClosed.style.display = "none";
+    }
+}
+</script>
 
 </body>
 </html>

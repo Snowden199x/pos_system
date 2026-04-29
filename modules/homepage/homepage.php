@@ -5,20 +5,23 @@ if (!isset($_SESSION["logged_in"])) {
     exit();
 }
 
-$base_url = '/2ndYearSystem/POS_SYSTEM/';
+$base_url = '/Github/POS_System/';
 $current_page = isset($_GET['page']) ? $_GET['page'] : 'home';
 
 $menu_items = [
-    ['id' => 1, 'name' => 'Eruption',          'price' => 229, 'category' => 'sushi', 'image' => 'assets/images/eruption.png'],
-    ['id' => 2, 'name' => 'Cheesy Shrimp Bomb', 'price' => 169, 'category' => 'sushi', 'image' => 'assets/images/cheesyshrimp.png'],
-    ['id' => 3, 'name' => 'Crazy Crab',          'price' => 158, 'category' => 'sushi', 'image' => 'assets/images/crazycrab.png'],
-    ['id' => 4, 'name' => 'Tori Floss Maki',     'price' => 149, 'category' => 'sushi', 'image' => 'assets/images/torifloss.png'],
-    ['id' => 5, 'name' => 'Ebi Tempura Roll',    'price' => 149, 'category' => 'sushi', 'image' => 'assets/images/ebitemp.png'],
-    ['id' => 6, 'name' => 'Mango Craze',         'price' => 139, 'category' => 'sushi', 'image' => 'assets/images/mangocraze.png'],
-    ['id' => 7, 'name' => 'Carbonara',           'price' => 185, 'category' => 'pasta', 'image' => 'assets/images/carbonara.png'],
-    ['id' => 8, 'name' => 'Bolognese',           'price' => 175, 'category' => 'pasta', 'image' => 'assets/images/bolognese.png'],
-    ['id' => 9, 'name' => 'Aglio e Olio',        'price' => 155, 'category' => 'pasta', 'image' => 'assets/images/aglio-olio.png'],
+    ['id' => 1, 'name' => 'Eruption',           'price' => 229, 'category' => 'sushi', 'image' => 'assets/images/eruption.png'],
+    ['id' => 2, 'name' => 'Cheesy Shrimp Bomb',  'price' => 169, 'category' => 'sushi', 'image' => 'assets/images/cheesyshrimp.png'],
+    ['id' => 3, 'name' => 'Crazy Crab',           'price' => 159, 'category' => 'sushi', 'image' => 'assets/images/crazycrab.png'],
+    ['id' => 4, 'name' => 'Tori Floss Maki',      'price' => 149, 'category' => 'sushi', 'image' => 'assets/images/torifloss.png'],
+    ['id' => 5, 'name' => 'Ebi Tempura Roll',     'price' => 149, 'category' => 'sushi', 'image' => 'assets/images/ebitemp.png'],
+    ['id' => 6, 'name' => 'Mango Craze',          'price' => 139, 'category' => 'sushi', 'image' => 'assets/images/mangocraze.png'],
+    ['id' => 7, 'name' => 'Creamy Jalapeño',      'price' => 179, 'category' => 'pasta', 'image' => 'assets/images/jalapeno.png'],
+    ['id' => 8, 'name' => 'Creamy Carbonara',     'price' => 169, 'category' => 'pasta', 'image' => 'assets/images/carbonara.png'],
+    ['id' => 9, 'name' => 'Creamy Tuna Pesto',    'price' => 169, 'category' => 'pasta', 'image' => 'assets/images/tunapesto.png'],
 ];
+
+// Discount map: price => fixed discount (floor of 20%)
+$discount_map = [229=>45, 169=>33, 159=>31, 149=>29, 139=>27, 179=>35];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -28,9 +31,16 @@ $menu_items = [
     <title>Twist &amp; Roll POS</title>
     <link rel="stylesheet" href="<?= $base_url ?>assets/index.css">
     <link rel="stylesheet" href="<?= $base_url ?>modules/homepage/homepage.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Pass discount map to JS -->
+    <script>
+        const DISCOUNT_MAP = <?= json_encode($discount_map) ?>;
+        const MENU_ITEMS   = <?= json_encode(array_column($menu_items, null, 'id')) ?>;
+    </script>
 </head>
 <body>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toast-container"></div>
 
 <!-- TOP NAVBAR -->
 <header class="navbar">
@@ -43,9 +53,26 @@ $menu_items = [
         <a href="index.php?page=statistics" class="nav-link <?= $current_page === 'statistics' ? 'nav-link--active' : '' ?>">Statistics</a>
     </nav>
 
-    <div class="navbar__datetime">
-        <div class="navbar__day"  id="current-day">Wednesday</div>
-        <div class="navbar__date" id="current-date">April 22, 2026 at 05:32 PM</div>
+    <div class="navbar__right">
+        <div class="navbar__datetime">
+            <div class="navbar__day"  id="current-day"></div>
+            <div class="navbar__date" id="current-date"></div>
+        </div>
+        <div class="profile-menu" id="profile-menu">
+            <button class="profile-btn" id="profile-btn" aria-label="Profile">
+                <img src="<?= $base_url ?>assets/images/profile.png" alt="Profile" class="profile-icon">
+            </button>
+            <div class="profile-dropdown" id="profile-dropdown">
+                <button class="logout-btn" id="logout-btn" data-logout-url="index.php?logout=1">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    Logout
+                </button>
+            </div>
+        </div>
     </div>
 </header>
 
@@ -75,8 +102,9 @@ $menu_items = [
                          class="menu-card__image"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                     <div class="menu-card__image-placeholder" style="display:none;">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-                            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
                             <polyline points="21 15 16 10 5 21"/>
                         </svg>
                     </div>
@@ -92,16 +120,21 @@ $menu_items = [
 
     <!-- RIGHT PANEL: ORDER -->
     <aside class="order-panel">
+
+        <!-- Dine In / Take Out -->
         <div class="order-panel__type">
             <button class="type-btn type-btn--active" data-type="dine-in">Dine in</button>
             <button class="type-btn" data-type="take-out">Take out</button>
         </div>
 
-        <div class="order-panel__beeper">
-            <label class="beeper-label">Beeper #</label>
-            <input type="number" class="beeper-input" id="beeper-input" min="1" placeholder="1">
+        <!-- Beeper -->
+        <div class="order-panel__beeper" id="beeper-wrap">
+            <label class="beeper-label" for="beeper-input">Beeper #</label>
+            <input type="number" class="beeper-input" id="beeper-input" min="1" placeholder="Enter number">
         </div>
+        <p class="beeper-error-msg" id="beeper-error">Beeper number is required.</p>
 
+        <!-- Order Items -->
         <div class="order-items-section">
             <p class="order-items-label">ORDER ITEMS</p>
             <div class="order-items-list" id="order-items-list">
@@ -116,10 +149,11 @@ $menu_items = [
             </div>
         </div>
 
+        <!-- Payment Summary -->
         <div class="payment-summary">
             <p class="payment-summary__title">PAYMENT SUMMARY</p>
             <div class="payment-summary__row">
-                <span>Discount</span>
+                <span class="discount-label">Discount</span>
                 <label class="toggle-switch">
                     <input type="checkbox" id="discount-toggle">
                     <span class="toggle-slider"></span>
@@ -128,7 +162,7 @@ $menu_items = [
             </div>
             <div class="payment-summary__row">
                 <span>Subtotal</span>
-                <span id="subtotal-value">Php 0.00</span>
+                <span class="subtotal-value-normal" id="subtotal-value">Php 0</span>
             </div>
             <div class="payment-summary__divider"></div>
             <div class="payment-summary__total">
@@ -137,20 +171,29 @@ $menu_items = [
             </div>
         </div>
 
+        <!-- Payment Method -->
         <div class="payment-methods">
             <button class="payment-btn payment-btn--active" data-method="cash">Cash</button>
             <button class="payment-btn" data-method="gcash">Gcash</button>
         </div>
 
-        <div class="amount-input-wrap">
-            <input type="number" class="amount-input" id="amount-input" placeholder="Php 0.00" step="0.01" min="0">
+        <!-- Amount Paid -->
+        <div class="amount-input-wrap" id="amount-wrap">
+            <input type="number" class="amount-input" id="amount-input" placeholder="Php 0.00" step="1" min="0">
         </div>
 
-        <button class="place-order-btn" id="place-order-btn">
+        <!-- Change display -->
+        <div class="change-display" id="change-display" style="display:none;">
+            <span class="change-display__label">Change</span>
+            <span class="change-display__amount" id="change-amount">Php 0.00</span>
+        </div>
+
+        <!-- Place Order -->
+        <button class="place-order-btn" id="place-order-btn" disabled>
             Place order – Php 0.00
         </button>
-    </aside>
 
+    </aside>
 </main>
 
 <script src="<?= $base_url ?>assets/js/main.js"></script>
