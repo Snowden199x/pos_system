@@ -1,13 +1,22 @@
 <?php
-$host = '127.0.0.1';
-$dbname = 'pos_system';
-$username = 'root';
-$password = '';
+$host    = '127.0.0.1';
+$db      = 'pos_system';
+$user    = 'root';
+$pass    = '';
+$charset = 'utf8mb4';
+
+$dsn = "mysql:host=$host;port=3306;dbname=$db;charset=$charset";
+
+$options = [
+    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    PDO::ATTR_EMULATE_PREPARES   => false,
+];
 
 try {
-    $pdo = new PDO("mysql:host=$host;port=3306;dbname=$dbname", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = new PDO($dsn, $user, $pass, $options);
 } catch (PDOException $e) {
-    die("Connection failed: " . $e->getMessage());
+    http_response_code(500);
+    die(json_encode(['success' => false, 'message' => 'DB connection failed: ' . $e->getMessage()]));
 }
 ?>
