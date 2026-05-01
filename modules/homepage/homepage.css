@@ -144,12 +144,13 @@ body {
    ============================================= */
 .pos-layout {
     display: grid;
-    grid-template-columns: 1fr 500px;
+    grid-template-columns: 1fr 360px;
     gap: 0;
     flex: 1;
     min-height: 0;
     overflow: hidden;
     height: calc(100vh - 110px);
+    width: 100%;
 }
 
 /* =============================================
@@ -219,7 +220,7 @@ body {
 .menu-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
+    gap: 18px;
     margin-right: 8px;
 }
 
@@ -298,6 +299,8 @@ body {
     font-weight: 600;
 }
 
+
+
 /* =============================================
    ORDER PANEL (RIGHT) — floating card
    ============================================= */
@@ -309,13 +312,15 @@ body {
     gap: 12px;
     padding: 24px 22px;
     overflow: hidden;
-    width: 454px;
-    height: 759px;
+
+    width: 100%;
+    min-width: 0;
+
     border-radius: 50px;
     box-shadow: 0px 0px 49.6px -18px rgba(0, 0, 0, 0.25);
-    align-self: center;
-    margin: auto auto auto 20px;
-    flex-shrink: 0;
+
+    align-self: stretch;
+    margin: 0;
 }
 
 /* Dine In / Take Out */
@@ -330,6 +335,12 @@ body {
     padding: 0;
     flex-shrink: 0;
     overflow: hidden;
+}
+
+.order-panel {
+    position: sticky;
+    top: 10px;
+    min-width: 360px;
 }
 
 .type-btn {
@@ -890,18 +901,10 @@ body {
    RESPONSIVE
    ============================================= */
 
-/* Large desktop */
-@media (min-width: 1200px) {
-    .menu-grid { grid-template-columns: repeat(4, 1fr); }
-    .pos-layout { grid-template-columns: 1fr 500px; }
-}
+
 
 /* Medium desktop — 3 cols */
-@media (max-width: 1199px) and (min-width: 861px) {
-    .menu-grid { grid-template-columns: repeat(3, 1fr); }
-    .pos-layout { grid-template-columns: 1fr 460px; }
-    .order-panel { width: 420px; margin: auto auto auto 15px; }
-}
+
 
 /* Stacked layout on tablet/mobile */
 @media (max-width: 860px) {
@@ -999,4 +1002,133 @@ body {
     .menu-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
     .menu-card__info { padding: 6px 10px 10px; }
     .menu-card__name { font-size: 12px; }
+}
+
+/* =============================================
+   EXTRA RESPONSIVE FIXES
+   ============================================= */
+
+/* Phones */
+@media (max-width: 600px) {
+
+body {
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+    .navbar {
+        padding: 10px;
+    }
+
+    .navbar__right {
+        gap: 10px;
+    }
+
+    .navbar__nav {
+        height: auto;
+        padding: 8px;
+        border-radius: 20px;
+        flex-wrap: wrap;
+    }
+
+    .nav-link {
+        flex: 1 1 auto;
+        min-width: 90px;
+        font-size: 12px;
+    }
+
+    .menu-panel__title {
+        font-size: 24px;
+    }
+
+    .menu-grid {
+        grid-template-columns: 1fr;
+    }
+
+   .menu-card {
+    min-height: 220px;
+    aspect-ratio: auto;
+}
+
+    .menu-card__image-wrap {
+        height: 160px;
+    }
+
+    .order-panel {
+        border-radius: 24px;
+        padding: 14px;
+    }
+
+    .payment-methods {
+        grid-template-columns: 1fr;
+    }
+
+    .payment-btn {
+        width: 100%;
+    }
+
+    .order-item {
+        flex-wrap: wrap;
+    }
+
+    .order-item__name {
+        width: 100%;
+    }
+}
+
+/* Small phones */
+@media (max-width: 400px) {
+
+    .navbar__logo-img {
+        height: 40px;
+    }
+
+    .nav-link {
+        font-size: 11px;
+        padding: 4px 6px;
+    }
+
+    .menu-panel {
+        padding: 10px;
+    }
+
+    .menu-card__name {
+        font-size: 13px;
+    }
+
+    .menu-card__price {
+        font-size: 12px;
+    }
+
+    .place-order-btn {
+        font-size: 12px;
+        padding: 10px;
+    }
+}
+
+
+@media (max-width: 1400px) {
+
+    .pos-layout {
+        grid-template-columns: minmax(0, 1fr) 380px;
+    }
+}
+
+@media (max-width: 1200px) {
+
+    .pos-layout {
+        grid-template-columns: minmax(0, 1fr) 340px;
+    }
+}
+
+@media (max-width: 1000px) {
+
+    .pos-layout {
+        grid-template-columns: minmax(0, 1fr) 300px;
+    }
+
+    .order-panel {
+        padding: 18px 16px;
+        border-radius: 35px;
+    }
 }
