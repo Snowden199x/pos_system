@@ -17,7 +17,7 @@ if (!isset($data['order_id'])) {
 }
 
 try {
-    $stmt = $pdo->prepare("UPDATE orders SET status = 'served' WHERE id = ?");
+    $stmt = $pdo->prepare("UPDATE orders SET status = 'served', served_at = NOW() WHERE id = ?");
     $stmt->execute([$data['order_id']]);
     echo json_encode(['success' => true]);
 } catch (Exception $e) {
