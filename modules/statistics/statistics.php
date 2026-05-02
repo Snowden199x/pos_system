@@ -9,18 +9,19 @@ $current_page = 'statistics';
 
 require_once __DIR__ . '/../../db/connection.php';
 
-$selected_year  = isset($_GET['year'])  ? (int)$_GET['year']  : (int)date('Y');
-$selected_month = isset($_GET['month']) ? (int)$_GET['month'] : (int)date('m');
-$selected_section = isset($_GET['section']) ? $_GET['section'] : null; // orders, served, voids
-$sidebar_open   = isset($_GET['sidebar']) ? true : false;
+$selected_year    = isset($_GET['year'])    ? (int)$_GET['year']    : (int)date('Y');
+$selected_month   = isset($_GET['month'])   ? (int)$_GET['month']   : (int)date('m');
+$selected_section = isset($_GET['section']) ? $_GET['section']      : null;
+$sidebar_open     = isset($_GET['sidebar']) ? true                  : false;
 
-$months_list = [1=>'January',2=>'February',3=>'March',4=>'April',5=>'May',6=>'June',
-                7=>'July',8=>'August',9=>'September',10=>'October',11=>'November',12=>'December'];
+$months_list = [
+    1=>'January',2=>'February',3=>'March',4=>'April',
+    5=>'May',6=>'June',7=>'July',8=>'August',
+    9=>'September',10=>'October',11=>'November',12=>'December'
+];
 
-// Available years
-$years_stmt = $pdo->query("SELECT DISTINCT YEAR(created_at) as yr FROM orders ORDER BY yr DESC");
-$years = $years_stmt->fetchAll(PDO::FETCH_COLUMN);
-if (empty($years)) $years = [(int)date('Y')];
+// Year range: 2026–2036 (always show, even if no data)
+$year_range = range(2026, 2036); // descending
 
 // ── DASHBOARD DATA ─────────────────────────────────────────────────────────
 $today = date('Y-m-d');
@@ -56,7 +57,7 @@ $monthly_trend_stmt = $pdo->prepare("SELECT MONTH(created_at) as mo, COALESCE(SU
 $monthly_trend_stmt->execute([$selected_year]);
 $monthly_trend = $monthly_trend_stmt->fetchAll();
 
-// ── SIDEBAR DATA ───────────────────────────────────────────────────────────
+// ── SIDEBAR DATA (per selected year only) ─────────────────────────────────
 $annual_stmt = $pdo->prepare("SELECT MONTH(created_at) as mo, COALESCE(SUM(total),0) as total, COUNT(*) as orders, COUNT(CASE WHEN status='served' THEN 1 END) as served FROM orders WHERE YEAR(created_at)=? AND status IN ('pending','served') GROUP BY MONTH(created_at) ORDER BY mo");
 $annual_stmt->execute([$selected_year]);
 $annual_raw = $annual_stmt->fetchAll();
@@ -67,7 +68,13 @@ $annual_total_stmt = $pdo->prepare("SELECT COALESCE(SUM(total),0) as t FROM orde
 $annual_total_stmt->execute([$selected_year]);
 $annual_total = $annual_total_stmt->fetchColumn();
 
-// ── SIDEBAR SECTION DATA (Orders list view) ────────────────────────────────
+// Voids count per month
+$voids_stmt = $pdo->prepare("SELECT MONTH(created_at) as mo, COUNT(*) as cnt FROM orders WHERE YEAR(created_at)=? AND status='voided' GROUP BY MONTH(created_at)");
+$voids_stmt->execute([$selected_year]);
+$voids_by_month = [];
+foreach ($voids_stmt->fetchAll() as $r) $voids_by_month[$r['mo']] = $r['cnt'];
+
+// ── SIDEBAR SECTION DATA ───────────────────────────────────────────────────
 $section_orders = [];
 $section_stats  = [];
 if ($sidebar_open && $selected_section) {
@@ -86,12 +93,10 @@ if ($sidebar_open && $selected_section) {
     $sec_stmt->execute([$selected_year, $selected_month]);
     $section_orders = $sec_stmt->fetchAll();
 
-    // Stats for section header
     $sec_stats_stmt = $pdo->prepare("SELECT COUNT(*) as total, MAX(total) as highest, MIN(total) as lowest, COALESCE(SUM(total),0) as sum FROM orders WHERE YEAR(created_at)=? AND MONTH(created_at)=? AND status IN ($status_filter)");
     $sec_stats_stmt->execute([$selected_year, $selected_month]);
     $section_stats = $sec_stats_stmt->fetch();
 
-    // For highest/lowest order date
     $high_stmt = $pdo->prepare("SELECT DATE(created_at) as d FROM orders WHERE YEAR(created_at)=? AND MONTH(created_at)=? AND status IN ($status_filter) ORDER BY total DESC LIMIT 1");
     $high_stmt->execute([$selected_year, $selected_month]);
     $high_date = $high_stmt->fetchColumn();
@@ -100,7 +105,6 @@ if ($sidebar_open && $selected_section) {
     $low_stmt->execute([$selected_year, $selected_month]);
     $low_date = $low_stmt->fetchColumn();
 
-    // Orders per day for bar chart
     $bar_stmt = $pdo->prepare("SELECT DATE(created_at) as d, COUNT(*) as cnt FROM orders WHERE YEAR(created_at)=? AND MONTH(created_at)=? AND status IN ($status_filter) GROUP BY DATE(created_at) ORDER BY d");
     $bar_stmt->execute([$selected_year, $selected_month]);
     $bar_data = $bar_stmt->fetchAll();
@@ -157,59 +161,72 @@ $bar_json     = isset($bar_data) ? json_encode($bar_data) : '[]';
 
     <!-- ── SIDEBAR ──────────────────────────────────────────────────────── -->
     <aside class="stats-sidebar <?= $sidebar_open ? 'stats-sidebar--open' : '' ?>" id="stats-sidebar">
+
         <div class="sidebar-header">
-            <button class="sidebar-toggle" id="sidebar-toggle" onclick="closeSidebar()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            <button class="sidebar-toggle" id="sidebar-toggle"
+                onclick="<?= $sidebar_open ? 'location.href=\'?page=statistics&year='.$selected_year.'\'' : 'closeSidebar()' ?>">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
             </button>
             <a href="index.php?page=statistics" class="sidebar-title">Statistics</a>
         </div>
 
         <div class="sidebar-tree">
-            <?php foreach ($years as $yr): ?>
-            <div class="tree-year" id="tree-<?= $yr ?>">
-                <div class="tree-year__label <?= $yr == $selected_year ? 'open' : '' ?>" onclick="toggleYear(<?= $yr ?>)">
-                    <span class="tree-arrow" id="ya-<?= $yr ?>"><?= $yr == $selected_year ? '▾' : '›' ?></span>
-                    <span class="folder-icon">📁</span>
-                    <span><?= $yr ?></span>
-                </div>
-                <div class="tree-months" id="ym-<?= $yr ?>" style="display:<?= $yr == $selected_year ? 'block' : 'none' ?>">
-                    <?php foreach ($months_list as $num => $name): ?>
-                    <div class="tree-month" id="tm-<?= $yr ?>-<?= $num ?>">
-                        <div class="tree-month__label <?= ($yr==$selected_year && $num==$selected_month && $sidebar_open) ? 'active' : '' ?>"
-                             onclick="toggleMonth(<?= $yr ?>, <?= $num ?>)">
-                            <span class="tree-arrow" id="ma-<?= $yr ?>-<?= $num ?>"><?= ($yr==$selected_year && $num==$selected_month && $sidebar_open) ? '▾' : '›' ?></span>
-                            <span class="folder-icon">📂</span>
-                            <span><?= $name ?></span>
-                        </div>
-                        <div class="tree-month__children" id="mc-<?= $yr ?>-<?= $num ?>"
-                             style="display:<?= ($yr==$selected_year && $num==$selected_month && $sidebar_open) ? 'block' : 'none' ?>">
-                            <a href="?page=statistics&sidebar=1&year=<?= $yr ?>&month=<?= $num ?>&section=orders"
-                               class="tree-item <?= $selected_section==='orders' ? 'tree-item--active' : '' ?>">
-                                <span>📋</span> Orders
-                                <span class="tree-count"><?= $annual_by_month[$num]['orders'] ?? 0 ?></span>
-                            </a>
-                            <a href="?page=statistics&sidebar=1&year=<?= $yr ?>&month=<?= $num ?>&section=served"
-                               class="tree-item <?= $selected_section==='served' ? 'tree-item--active' : '' ?>">
-                                <span>✅</span> Served
-                                <span class="tree-count"><?= $annual_by_month[$num]['served'] ?? 0 ?></span>
-                            </a>
-                            <a href="?page=statistics&sidebar=1&year=<?= $yr ?>&month=<?= $num ?>&section=voids"
-                               class="tree-item <?= $selected_section==='voids' ? 'tree-item--active' : '' ?>">
-                                <span>❌</span> Voids
-                                <span class="tree-count">0</span>
-                            </a>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
 
-                    <div class="tree-annual">
-                        <span class="folder-icon">📁</span>
-                        <span>Annual Income</span>
-                        <span class="tree-count tree-count--annual">₱<?= number_format($annual_total, 0) ?></span>
+            <!-- Year Dropdown -->
+            <div class="year-nav">
+                <span class="folder-icon">📁</span>
+                <select class="year-select"
+                    onchange="location.href='?page=statistics&year='+this.value"
+                    onfocus="this.size=4;"
+                    onblur="this.size=1;">
+                    <?php foreach ($year_range as $yr): ?>
+                    <option value="<?= $yr ?>" <?= $yr == $selected_year ? 'selected' : '' ?>>
+                        <?= $yr ?>
+                    </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <!-- Months of selected year only -->
+            <div class="tree-months">
+                <?php foreach ($months_list as $num => $name): ?>
+                <div class="tree-month">
+                    <div class="tree-month__label <?= ($num == $selected_month && $sidebar_open) ? 'active' : '' ?>"
+                         onclick="toggleMonth(<?= $selected_year ?>, <?= $num ?>)">
+                        <span class="tree-arrow" id="ma-<?= $selected_year ?>-<?= $num ?>"><?= ($num == $selected_month && $sidebar_open) ? '▾' : '›' ?></span>
+                        <span class="folder-icon">📂</span>
+                        <span><?= $name ?></span>
                     </div>
+                    <div class="tree-month__children" id="mc-<?= $selected_year ?>-<?= $num ?>"
+                         style="display:<?= ($num == $selected_month && $sidebar_open) ? 'block' : 'none' ?>">
+                        <a href="?page=statistics&sidebar=1&year=<?= $selected_year ?>&month=<?= $num ?>&section=orders"
+                           class="tree-item <?= ($selected_section==='orders' && $num==$selected_month) ? 'tree-item--active' : '' ?>">
+                            <span>📋</span> Orders
+                            <span class="tree-count"><?= $annual_by_month[$num]['orders'] ?? 0 ?></span>
+                        </a>
+                        <a href="?page=statistics&sidebar=1&year=<?= $selected_year ?>&month=<?= $num ?>&section=served"
+                           class="tree-item <?= ($selected_section==='served' && $num==$selected_month) ? 'tree-item--active' : '' ?>">
+                            <span>✅</span> Served
+                            <span class="tree-count"><?= $annual_by_month[$num]['served'] ?? 0 ?></span>
+                        </a>
+                        <a href="?page=statistics&sidebar=1&year=<?= $selected_year ?>&month=<?= $num ?>&section=voids"
+                           class="tree-item <?= ($selected_section==='voids' && $num==$selected_month) ? 'tree-item--active' : '' ?>">
+                            <span>❌</span> Voids
+                            <span class="tree-count"><?= $voids_by_month[$num] ?? 0 ?></span>
+                        </a>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+
+                <div class="tree-annual">
+                    <span class="folder-icon">📁</span>
+                    <span>Annual Income</span>
+                    <span class="tree-count tree-count--annual">₱<?= number_format($annual_total, 0) ?></span>
                 </div>
             </div>
-            <?php endforeach; ?>
+
         </div>
     </aside>
 
@@ -217,9 +234,6 @@ $bar_json     = isset($bar_data) ? json_encode($bar_data) : '[]';
     <main class="stats-main" id="stats-main">
 
         <?php if ($sidebar_open && $selected_section): ?>
-        <!-- ═══════════════════════════════════════════════════════════════ -->
-        <!-- SIDEBAR SECTION VIEW: Orders / Served / Voids detail           -->
-        <!-- ═══════════════════════════════════════════════════════════════ -->
 
         <!-- Breadcrumb -->
         <div class="breadcrumb">
@@ -230,7 +244,6 @@ $bar_json     = isset($bar_data) ? json_encode($bar_data) : '[]';
             <span class="breadcrumb__current"><?= ucfirst($selected_section) ?></span>
         </div>
 
-        <!-- Section header -->
         <div class="section-view">
             <div class="section-view__top">
                 <h2 class="section-view__title"><?= ucfirst($selected_section) ?></h2>
@@ -239,7 +252,6 @@ $bar_json     = isset($bar_data) ? json_encode($bar_data) : '[]';
                 </div>
             </div>
 
-            <!-- Mini stat cards -->
             <div class="section-stats">
                 <div class="section-stat">
                     <div class="section-stat__icon section-stat__icon--purple">📋</div>
@@ -251,9 +263,9 @@ $bar_json     = isset($bar_data) ? json_encode($bar_data) : '[]';
                 <div class="section-stat">
                     <div class="section-stat__icon section-stat__icon--gold">📈</div>
                     <div>
-                        <div class="section-stat__label">Highest Orders</div>
-                        <div class="section-stat__val"><?= $section_stats['highest'] ? number_format($section_stats['highest'],0) : 0 ?></div>
-                        <?php if (isset($high_date) && $high_date): ?>
+                        <div class="section-stat__label">Highest Order</div>
+                        <div class="section-stat__val"><?= $section_stats['highest'] ? '₱'.number_format($section_stats['highest'],0) : 0 ?></div>
+                        <?php if (!empty($high_date)): ?>
                         <div class="section-stat__sub"><?= date('M j, Y', strtotime($high_date)) ?></div>
                         <?php endif; ?>
                     </div>
@@ -261,9 +273,9 @@ $bar_json     = isset($bar_data) ? json_encode($bar_data) : '[]';
                 <div class="section-stat">
                     <div class="section-stat__icon section-stat__icon--red">📉</div>
                     <div>
-                        <div class="section-stat__label">Lowest Orders</div>
-                        <div class="section-stat__val"><?= $section_stats['lowest'] ? number_format($section_stats['lowest'],0) : 0 ?></div>
-                        <?php if (isset($low_date) && $low_date): ?>
+                        <div class="section-stat__label">Lowest Order</div>
+                        <div class="section-stat__val"><?= $section_stats['lowest'] ? '₱'.number_format($section_stats['lowest'],0) : 0 ?></div>
+                        <?php if (!empty($low_date)): ?>
                         <div class="section-stat__sub"><?= date('M j, Y', strtotime($low_date)) ?></div>
                         <?php endif; ?>
                     </div>
@@ -277,13 +289,11 @@ $bar_json     = isset($bar_data) ? json_encode($bar_data) : '[]';
                 </div>
             </div>
 
-            <!-- Orders per Day bar chart -->
             <div class="section-chart-wrap">
                 <h3 class="section-chart-title">Orders per Day</h3>
-                <canvas id="sectionBarChart" height="100"></canvas>
+                <canvas id="sectionBarChart" height="80"></canvas>
             </div>
 
-            <!-- Orders List table -->
             <div class="orders-list-wrap">
                 <div class="orders-list__header">
                     <h3>Orders List</h3>
@@ -331,9 +341,6 @@ $bar_json     = isset($bar_data) ? json_encode($bar_data) : '[]';
         </div>
 
         <?php else: ?>
-        <!-- ═══════════════════════════════════════════════════════════════ -->
-        <!-- DEFAULT DASHBOARD VIEW                                          -->
-        <!-- ═══════════════════════════════════════════════════════════════ -->
 
         <!-- Header with hamburger -->
         <div class="dash-header">
@@ -343,7 +350,6 @@ $bar_json     = isset($bar_data) ? json_encode($bar_data) : '[]';
             <h1 class="dash-title">Statistics</h1>
         </div>
 
-        <!-- Daily Sales Overview -->
         <section class="overview-section">
             <p class="overview-label">Daily Sales Overview</p>
             <div class="overview-cards">
@@ -380,14 +386,9 @@ $bar_json     = isset($bar_data) ? json_encode($bar_data) : '[]';
             </div>
         </section>
 
-        <!-- Best/Least + Trend row -->
         <div class="dash-row">
-
-            <!-- Best Selling -->
             <div class="dash-box">
-                <div class="dash-box__header">
-                    <h3>🏆 Best Selling Menu (Top 3)</h3>
-                </div>
+                <div class="dash-box__header"><h3>🏆 Best Selling Menu (Top 3)</h3></div>
                 <div class="rank-list">
                     <?php if (empty($best_items)): ?>
                     <p class="no-data">No data yet.</p>
@@ -414,11 +415,8 @@ $bar_json     = isset($bar_data) ? json_encode($bar_data) : '[]';
                 </div>
             </div>
 
-            <!-- Least Selling -->
             <div class="dash-box">
-                <div class="dash-box__header">
-                    <h3>😔 Least Selling Menu (Top 3)</h3>
-                </div>
+                <div class="dash-box__header"><h3>😔 Least Selling Menu (Top 3)</h3></div>
                 <div class="rank-list">
                     <?php if (empty($least_items)): ?>
                     <p class="no-data">No data yet.</p>
@@ -445,7 +443,6 @@ $bar_json     = isset($bar_data) ? json_encode($bar_data) : '[]';
                 </div>
             </div>
 
-            <!-- Sales Trend -->
             <div class="dash-box dash-box--trend">
                 <div class="dash-box__header">
                     <h3>Sales Trend</h3>
@@ -456,10 +453,8 @@ $bar_json     = isset($bar_data) ? json_encode($bar_data) : '[]';
                 </div>
                 <canvas id="trendChart" height="160"></canvas>
             </div>
-
         </div>
 
-        <!-- Sales per Day bar -->
         <div class="dash-box dash-box--full">
             <div class="dash-box__header">
                 <h3>Sales per Day</h3>
