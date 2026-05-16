@@ -98,12 +98,17 @@
     const profileBtn = document.getElementById('profile-btn');
     const dropdown   = document.getElementById('profile-dropdown');
     const logoutBtn  = document.getElementById('logout-btn');
+    const excelBtn   = document.getElementById('excel-btn');
+
     if (profileBtn && dropdown) {
         profileBtn.addEventListener('click', e => { e.stopPropagation(); dropdown.classList.toggle('open'); });
         document.addEventListener('click', () => dropdown.classList.remove('open'));
     }
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => { window.location.href = logoutBtn.dataset.logoutUrl; });
+    }
+    if (excelBtn) {
+        excelBtn.addEventListener('click', () => { alert('Excel export coming soon!'); });
     }
 
     // ── ORDER MENU ─────────────────────────────────────────
@@ -253,7 +258,6 @@
         epmAmountWrap.style.display = epm.paymentMethod === 'gcash' ? 'none' : '';
     }
 
-    // ── Build menu picker grid (sushi only — no category filter needed) ────
     function renderPickerGrid() {
         epmPickerGrid.innerHTML = '';
         const items = (typeof MENU_ITEMS !== 'undefined') ? MENU_ITEMS : [];
@@ -283,14 +287,12 @@
         });
     }
 
-    // ── Toggle menu picker ─────────────────────────────────
     epmAddBtn.addEventListener('click', () => {
         const open = epmMenuPicker.classList.toggle('open');
         epmAddBtn.textContent = open ? 'close ✕' : 'add order +';
         if (open) renderPickerGrid();
     });
 
-    // ── Type buttons ───────────────────────────────────────
     epmTypeWrap.querySelectorAll('.type-btn').forEach(btn => {
         btn.addEventListener('click', function () {
             epmTypeWrap.querySelectorAll('.type-btn').forEach(b => b.classList.remove('type-btn--active'));
@@ -300,7 +302,6 @@
         });
     });
 
-    // ── Payment buttons ────────────────────────────────────
     epmPaymentWrap.querySelectorAll('.payment-btn').forEach(btn => {
         btn.addEventListener('click', function () {
             epmPaymentWrap.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('payment-btn--active'));
@@ -311,14 +312,12 @@
         });
     });
 
-    // ── Discount toggle ────────────────────────────────────
     epmDiscToggle.addEventListener('change', () => {
         epm.discountEnabled = epmDiscToggle.checked;
         renderEpmItems();
         updateEpmTotals();
     });
 
-    // ── Open edit modal ────────────────────────────────────
     document.querySelectorAll('.edit-order-btn').forEach(btn => {
         btn.addEventListener('click', function () {
             epmMenuPicker.classList.remove('open');
@@ -358,7 +357,6 @@
         });
     });
 
-    // ── Close edit modal ───────────────────────────────────
     function closeEditModal() {
         editModal.classList.remove('show');
         epmMenuPicker.classList.remove('open');
@@ -370,7 +368,6 @@
         if (e.target === this) closeEditModal();
     });
 
-    // ── Save Changes ───────────────────────────────────────
     epmSaveBtn.addEventListener('click', function () {
         const { subtotal, disc, total } = calcEpmTotals();
         const beeper = parseInt(epmBeeper.value) || 0;
@@ -433,37 +430,68 @@
         });
     });
 
-    // ── DELETE MODAL ───────────────────────────────────────
-    const deleteModal = document.getElementById('deleteModal');
-    let deleteOrderId = null;
-
-    function closeDeleteModal() { deleteModal.classList.remove('show'); }
-    window.closeDeleteModal = closeDeleteModal;
-
-    document.querySelectorAll('.delete-order-btn').forEach(btn => {
+    // ══════════════════════════════════════════════════════
+    //  VOID MODAL
+    // ══════════════════════════════════════════════════════
+ 
+    const voidModal      = document.getElementById('voidModal');
+    const confirmVoidBtn = document.getElementById('confirmVoidBtn');
+    const voidModalMsg   = document.getElementById('voidModalMsg');
+    let voidOrderId      = null;
+ 
+    function closeVoidModal() { voidModal.classList.remove('show'); }
+    window.closeVoidModal = closeVoidModal;
+ 
+    voidModal.addEventListener('click', function (e) { if (e.target === this) closeVoidModal(); });
+ 
+    document.querySelectorAll('.void-order-btn').forEach(btn => {
         btn.addEventListener('click', function () {
-            deleteOrderId = this.dataset.id;
-            deleteModal.classList.add('show');
+            voidOrderId = this.dataset.id;
+            const label = this.dataset.label;
+            const total = parseFloat(this.dataset.total) || 0;
+            voidModalMsg.innerHTML = `You're about to void <strong>${label}</strong> (₱${total.toLocaleString()}).<br><br>
+                It will be marked as <strong style="color:#D8C36F;">Voided</strong> and will still appear in Statistics under Voids. This cannot be undone.`;
+            voidModal.classList.add('show');
         });
     });
-
-    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-    if (confirmDeleteBtn) {
-        confirmDeleteBtn.addEventListener('click', function () {
-            fetch('modules/orders/delete_order.php', {
-                method:  'POST',
+ 
+    if (confirmVoidBtn) {
+        confirmVoidBtn.addEventListener('click', function () {
+            confirmVoidBtn.disabled = true;
+            confirmVoidBtn.textContent = 'Voiding...';
+            fetch('modules/orders/void_order.php', {
+                method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body:    JSON.stringify({ order_id: deleteOrderId }),
+                body: JSON.stringify({ order_id: voidOrderId })
             })
             .then(r => r.json())
             .then(data => {
-                if (data.success) { location.reload(); }
-                else { alert(data.message || 'Delete failed.'); }
+                if (data.success) {
+                    const card = document.querySelector(`.order-card[data-id="${voidOrderId}"]`);
+                    closeVoidModal();
+                    if (card) {
+                        card.style.transition = 'opacity 0.3s, transform 0.3s';
+                        card.style.opacity = '0';
+                        card.style.transform = 'scale(0.95)';
+                        setTimeout(() => {
+                            card.remove();
+                            showEmpty(document.querySelectorAll('.order-card').length === 0);
+                        }, 300);
+                    }
+                } else {
+                    alert('Failed to void: ' + (data.message || 'Unknown error'));
+                    confirmVoidBtn.disabled = false;
+                    confirmVoidBtn.textContent = 'Yes, Void it';
+                }
             })
-            .catch(() => { alert('Network error.'); });
+            .catch(() => {
+                alert('Network error. Please try again.');
+                confirmVoidBtn.disabled = false;
+                confirmVoidBtn.textContent = 'Yes, Void it';
+            });
         });
     }
-
+    
     // ── CLOCK ──────────────────────────────────────────────
     function updateClock() {
         const now    = new Date();

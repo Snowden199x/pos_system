@@ -25,7 +25,6 @@ $stmt = $pdo->query("
 
 $orders = $stmt->fetchAll();
 
-// Menu items (same as homepage)
 $menu_items = [
     ['id' => 1, 'name' => 'Eruption',           'price' => 229, 'category' => 'sushi', 'image' => 'assets/images/eruption.png'],
     ['id' => 2, 'name' => 'Cheesy Shrimp Bomb',  'price' => 169, 'category' => 'sushi', 'image' => 'assets/images/cheesyshrimp.png'],
@@ -58,7 +57,9 @@ $discount_map = [229=>45, 169=>33, 159=>31, 149=>29, 139=>27];
 <body>
 
 <header class="navbar">
-    <img src="<?= $base_url ?>assets/images/logo.png" class="navbar__logo-img" alt="Twist & Roll">
+    <a href="index.php?page=home" style="display:flex;align-items:center;">
+        <img src="<?= $base_url ?>assets/images/logo.png" class="navbar__logo-img" alt="Twist & Roll">
+    </a>
     <nav class="navbar__nav">
         <a href="index.php?page=home"       class="nav-link <?= $current_page==='home'       ? 'nav-link--active':'' ?>">Home</a>
         <a href="index.php?page=orders"     class="nav-link <?= $current_page==='orders'     ? 'nav-link--active':'' ?>">Orders</a>
@@ -75,6 +76,20 @@ $discount_map = [229=>45, 169=>33, 159=>31, 149=>29, 139=>27];
                 <img src="<?= $base_url ?>assets/images/profile.png" class="profile-icon" alt="Profile">
             </button>
             <div class="profile-dropdown" id="profile-dropdown">
+                <button class="dropdown-item" id="excel-btn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <path d="M8 8l8 8M16 8l-8 8"/>
+                    </svg>
+                    Excel
+                </button>
+                <a href="index.php?page=profile" class="dropdown-item">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="7" r="4"/>
+                        <path d="M5.5 21a6.5 6.5 0 0 1 13 0"/>
+                    </svg>
+                    Profile
+                </a>
                 <button class="logout-btn" id="logout-btn" data-logout-url="index.php?logout=1">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -117,6 +132,7 @@ $discount_map = [229=>45, 169=>33, 159=>31, 149=>29, 139=>27];
             $type   = $o['order_type'];
             $typeLabel  = $type === 'dine-in' ? 'Dine in' : 'Take out';
             $badgeClass = $type === 'dine-in' ? 'dine' : 'takeout';
+            $orderLabel = $o['beeper_number'] ? '#'.$o['beeper_number'] : 'Order #'.str_pad($o['id'],4,'0',STR_PAD_LEFT);
 
             $itemsJson = [];
             for ($i = 0; $i < count($names); $i++) {
@@ -150,7 +166,10 @@ $discount_map = [229=>45, 169=>33, 159=>31, 149=>29, 139=>27];
                                 data-discount="<?= $o['discount'] ?>"
                                 data-items="<?= htmlspecialchars(json_encode($itemsJson), ENT_QUOTES) ?>"
                             >Edit</button>
-                            <button class="delete-order-btn" data-id="<?= $o['id'] ?>">Delete</button>
+                            <button class="void-order-btn"
+                                data-id="<?= $o['id'] ?>"
+                                data-label="<?= htmlspecialchars($orderLabel) ?>"
+                                data-total="<?= $o['total'] ?>">Void</button>
                         </div>
                     </div>
                 </div>
@@ -204,7 +223,6 @@ $discount_map = [229=>45, 169=>33, 159=>31, 149=>29, 139=>27];
 <!-- EDIT MODAL -->
 <div class="modal-overlay" id="editModal">
     <div class="edit-panel-modal">
-
         <div class="epm-header">
             <div>
                 <h2>Edit Order</h2>
@@ -231,7 +249,6 @@ $discount_map = [229=>45, 169=>33, 159=>31, 149=>29, 139=>27];
 
         <button type="button" class="epm-add-btn" id="epm-add-btn">add order +</button>
 
-        <!-- Menu Picker (hidden by default) -->
         <div class="epm-menu-picker" id="epm-menu-picker">
             <div class="epm-picker-filters">
                 <button class="epm-pf active" data-cat="all">All</button>
@@ -280,14 +297,20 @@ $discount_map = [229=>45, 169=>33, 159=>31, 149=>29, 139=>27];
     </div>
 </div>
 
-<!-- DELETE MODAL -->
-<div class="modal-overlay" id="deleteModal">
+<!-- VOID MODAL -->
+<div class="modal-overlay" id="voidModal">
     <div class="delete-box">
-        <h3>Delete Order?</h3>
-        <p>This order will be permanently deleted.</p>
+        <div style="width:52px;height:52px;border-radius:50%;background:rgba(216,195,111,0.2);
+            display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#D8C36F" stroke-width="2.2">
+                <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+            </svg>
+        </div>
+        <h3>Void Order?</h3>
+        <p id="voidModalMsg">This order will be marked as voided and will appear in Statistics under Voids. This cannot be undone.</p>
         <div class="delete-actions">
-            <button class="cancel-delete-btn" onclick="closeDeleteModal()">Cancel</button>
-            <button class="confirm-delete-btn" id="confirmDeleteBtn">Delete</button>
+            <button class="cancel-delete-btn" onclick="closeVoidModal()">Cancel</button>
+            <button class="confirm-void-btn" id="confirmVoidBtn">Yes, Void it</button>
         </div>
     </div>
 </div>

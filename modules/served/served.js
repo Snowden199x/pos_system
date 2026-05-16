@@ -6,7 +6,6 @@
     let currentFilter = 'all';
     let searchVal     = '';
 
-    // ── GET VISIBLE CARDS ──────────────────────────────────
     function getFilteredCards() {
         return Array.from(document.querySelectorAll('.served-card')).filter(card => {
             const typeMatch = currentFilter === 'all' || card.dataset.type === currentFilter;
@@ -15,23 +14,19 @@
         });
     }
 
-    // ── RENDER PAGE ────────────────────────────────────────
     function renderPage(page) {
         currentPage = page;
         const filtered = getFilteredCards();
         const total    = filtered.length;
         const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
 
-        // Clamp page
         if (currentPage > totalPages) currentPage = totalPages;
 
         const start = (currentPage - 1) * PER_PAGE;
         const end   = start + PER_PAGE;
 
-        // Hide all first
         document.querySelectorAll('.served-card').forEach(c => c.style.display = 'none');
 
-        // Show only current page slice
         filtered.forEach((card, idx) => {
             card.style.display = (idx >= start && idx < end) ? 'flex' : 'none';
         });
@@ -40,7 +35,6 @@
         renderPagination(currentPage, totalPages);
     }
 
-    // ── RENDER PAGINATION ──────────────────────────────────
     function renderPagination(page, totalPages) {
         const container = document.getElementById('pagination');
         if (!container) return;
@@ -51,21 +45,16 @@
         }
 
         let html = '';
-
-        // Prev arrow
         html += `<button class="pagination__arrow" id="pg-prev" ${page === 1 ? 'disabled' : ''}>&#8592;</button>`;
 
-        // Page numbers
         for (let i = 1; i <= totalPages; i++) {
             html += `<button class="pagination__btn ${i === page ? 'active' : ''}" data-page="${i}">${i}</button>`;
         }
 
-        // Next arrow
         html += `<button class="pagination__arrow" id="pg-next" ${page === totalPages ? 'disabled' : ''}>&#8594;</button>`;
 
         container.innerHTML = html;
 
-        // Events
         container.querySelector('#pg-prev')?.addEventListener('click', () => renderPage(currentPage - 1));
         container.querySelector('#pg-next')?.addEventListener('click', () => renderPage(currentPage + 1));
         container.querySelectorAll('.pagination__btn').forEach(btn => {
@@ -73,7 +62,6 @@
         });
     }
 
-    // ── FILTER ─────────────────────────────────────────────
     document.querySelectorAll('.served-filter').forEach(btn => {
         btn.addEventListener('click', function () {
             document.querySelectorAll('.served-filter').forEach(b => b.classList.remove('active'));
@@ -83,7 +71,6 @@
         });
     });
 
-    // ── SEARCH ─────────────────────────────────────────────
     const searchInput = document.getElementById('servedSearch');
     if (searchInput) {
         searchInput.addEventListener('input', function () {
@@ -92,7 +79,6 @@
         });
     }
 
-    // ── EMPTY STATE ────────────────────────────────────────
     function showEmpty(show) {
         let empty = document.getElementById('served-empty');
         if (!empty && show) {
@@ -116,6 +102,7 @@
     const profileBtn = document.getElementById('profile-btn');
     const dropdown   = document.getElementById('profile-dropdown');
     const logoutBtn  = document.getElementById('logout-btn');
+    const excelBtn   = document.getElementById('excel-btn');
 
     if (profileBtn && dropdown) {
         profileBtn.addEventListener('click', (e) => {
@@ -129,6 +116,10 @@
         logoutBtn.addEventListener('click', () => {
             window.location.href = logoutBtn.dataset.logoutUrl;
         });
+    }
+
+    if (excelBtn) {
+        excelBtn.addEventListener('click', () => { alert('Excel export coming soon!'); });
     }
 
     // ── CLOCK ──────────────────────────────────────────────
@@ -150,7 +141,6 @@
     updateClock();
     setInterval(updateClock, 1000);
 
-    // ── INIT ───────────────────────────────────────────────
     renderPage(1);
 
 })();

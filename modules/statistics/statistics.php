@@ -84,7 +84,6 @@ if ($sidebar_open && $selected_section) {
     if ($selected_section === 'served') $status_filter = "'served'";
     if ($selected_section === 'voids')  $status_filter = "'voided'";
 
-    // ── FIX: include discount, subtotal, served_at ──────────────────────
     $sec_stmt = $pdo->prepare("
         SELECT
             o.id,
@@ -145,7 +144,9 @@ $bar_json     = json_encode($bar_data);
 <body>
 
 <header class="navbar">
-    <img src="<?= $base_url ?>assets/images/logo.png" class="navbar__logo-img" alt="Twist & Roll">
+    <a href="index.php?page=home" style="display:flex;align-items:center;">
+        <img src="<?= $base_url ?>assets/images/logo.png" class="navbar__logo-img" alt="Twist & Roll">
+    </a>
     <nav class="navbar__nav">
         <a href="index.php?page=home"       class="nav-link">Home</a>
         <a href="index.php?page=orders"     class="nav-link">Orders</a>
@@ -162,24 +163,27 @@ $bar_json     = json_encode($bar_data);
                 <img src="<?= $base_url ?>assets/images/profile.png" class="profile-icon" alt="Profile">
             </button>
             <div class="profile-dropdown" id="profile-dropdown">
+
+                <!-- Excel -->
                 <button class="dropdown-item" id="excel-btn">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                        <line x1="8" y1="13" x2="16" y2="13"/>
-                        <line x1="8" y1="17" x2="16" y2="17"/>
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <path d="M8 8l8 8M16 8l-8 8"/>
                     </svg>
                     Excel
                 </button>
+
+                <!-- Profile -->
                 <a href="index.php?page=profile" class="dropdown-item">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                         <circle cx="12" cy="7" r="4"/>
+                        <path d="M5.5 21a6.5 6.5 0 0 1 13 0"/>
                     </svg>
                     Profile
                 </a>
-                <div class="dropdown-divider"></div>
-                <button class="dropdown-item dropdown-item--danger" id="logout-btn" data-logout-url="index.php?logout=1">
+
+                <!-- Logout -->
+                <button class="logout-btn" id="logout-btn" data-logout-url="index.php?logout=1">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
                         <polyline points="16 17 21 12 16 7"/>
@@ -187,6 +191,7 @@ $bar_json     = json_encode($bar_data);
                     </svg>
                     Logout
                 </button>
+
             </div>
         </div>
     </div>
@@ -263,7 +268,6 @@ $bar_json     = json_encode($bar_data);
 
         <?php if ($sidebar_open && $selected_section): ?>
 
-        <!-- Breadcrumb -->
         <div class="breadcrumb">
             <span class="breadcrumb__folder">📁 <?= $selected_year ?></span>
             <span class="breadcrumb__sep">›</span>
@@ -352,7 +356,6 @@ $bar_json     = json_encode($bar_data);
                         <tr><td colspan="6" class="table-empty">No records found.</td></tr>
                         <?php else: ?>
                         <?php foreach ($section_orders as $o):
-                            // Build items array
                             $items = [];
                             if (!empty($o['items_data'])) {
                                 foreach (explode(';;', $o['items_data']) as $item) {
@@ -396,7 +399,6 @@ $bar_json     = json_encode($bar_data);
 
         <?php else: ?>
 
-        <!-- Dashboard header -->
         <div class="dash-header">
             <button class="sidebar-toggle-btn" id="open-sidebar" onclick="openSidebar()">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -406,7 +408,6 @@ $bar_json     = json_encode($bar_data);
             <h1 class="dash-title">Statistics</h1>
         </div>
 
-        <!-- ── DAILY SALES OVERVIEW ── -->
         <section class="overview-section">
             <p class="overview-label">Daily Sales Overview</p>
             <div class="overview-cards">
@@ -443,9 +444,7 @@ $bar_json     = json_encode($bar_data);
             </div>
         </section>
 
-        <!-- ── BEST / LEAST / TREND ROW ── -->
         <div class="dash-row">
-            <!-- Best Selling -->
             <div class="dash-box">
                 <div class="dash-box__header">
                     <img src="<?= $base_url ?>assets/images/best_icon.png" alt="Best" class="dash-box__header-icon">
@@ -477,7 +476,6 @@ $bar_json     = json_encode($bar_data);
                 </div>
             </div>
 
-            <!-- Least Selling -->
             <div class="dash-box">
                 <div class="dash-box__header">
                     <img src="<?= $base_url ?>assets/images/least_icon.png" alt="Least" class="dash-box__header-icon">
@@ -509,7 +507,6 @@ $bar_json     = json_encode($bar_data);
                 </div>
             </div>
 
-            <!-- Sales Trend -->
             <div class="dash-box dash-box--trend">
                 <div class="dash-box__header">
                     <h3>Sales Trend</h3>
@@ -522,7 +519,6 @@ $bar_json     = json_encode($bar_data);
             </div>
         </div>
 
-        <!-- ── SALES PER DAY BAR ── -->
         <div class="dash-box dash-box--full">
             <div class="dash-box__header">
                 <h3>Sales per Day</h3>
