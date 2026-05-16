@@ -15,13 +15,12 @@ $menu_items = [
     ['id' => 4, 'name' => 'Tori Floss Maki',      'price' => 149, 'category' => 'sushi', 'image' => 'assets/images/torifloss.png'],
     ['id' => 5, 'name' => 'Ebi Tempura Roll',     'price' => 149, 'category' => 'sushi', 'image' => 'assets/images/ebitemp.png'],
     ['id' => 6, 'name' => 'Mango Craze',          'price' => 139, 'category' => 'sushi', 'image' => 'assets/images/mangocraze.png'],
-    ['id' => 7, 'name' => 'Creamy Jalapeño',      'price' => 179, 'category' => 'pasta', 'image' => 'assets/images/jalapeno.png'],
-    ['id' => 8, 'name' => 'Creamy Carbonara',     'price' => 169, 'category' => 'pasta', 'image' => 'assets/images/carbonara.png'],
-    ['id' => 9, 'name' => 'Creamy Tuna Pesto',    'price' => 169, 'category' => 'pasta', 'image' => 'assets/images/tunapesto.png'],
+    ['id' => 7, 'name' => 'Garden Maki',          'price' => 169, 'category' => 'sushi', 'image' => 'assets/images/gardenmaki.png'],
+    ['id' => 8, 'name' => 'Red Hot Chili Roll',   'price' => 179, 'category' => 'sushi', 'image' => 'assets/images/redhotchili.png'],
 ];
 
 // Discount map: price => fixed discount (floor of 20%)
-$discount_map = [229=>45, 169=>33, 159=>31, 149=>29, 139=>27, 179=>35];
+$discount_map = [229=>45, 169=>33, 159=>31, 149=>29, 139=>27];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -63,6 +62,26 @@ $discount_map = [229=>45, 169=>33, 159=>31, 149=>29, 139=>27, 179=>35];
                 <img src="<?= $base_url ?>assets/images/profile.png" alt="Profile" class="profile-icon">
             </button>
             <div class="profile-dropdown" id="profile-dropdown">
+
+                <!-- Excel -->
+                <button class="dropdown-item" id="excel-btn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <path d="M8 8l8 8M16 8l-8 8"/>
+                    </svg>
+                    Excel
+                </button>
+
+                <!-- Profile -->
+                <a href="index.php?page=profile" class="dropdown-item">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="7" r="4"/>
+                        <path d="M5.5 21a6.5 6.5 0 0 1 13 0"/>
+                    </svg>
+                    Profile
+                </a>
+
+                <!-- Logout -->
                 <button class="logout-btn" id="logout-btn" data-logout-url="index.php?logout=1">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -71,6 +90,7 @@ $discount_map = [229=>45, 169=>33, 159=>31, 149=>29, 139=>27, 179=>35];
                     </svg>
                     Logout
                 </button>
+
             </div>
         </div>
     </div>
@@ -82,12 +102,6 @@ $discount_map = [229=>45, 169=>33, 159=>31, 149=>29, 139=>27, 179=>35];
     <!-- LEFT PANEL: MENU -->
     <section class="menu-panel">
         <h2 class="menu-panel__title">Menu</h2>
-
-        <div class="category-filters">
-            <button class="filter-btn filter-btn--active" data-category="all">All</button>
-            <button class="filter-btn" data-category="sushi">Sushi</button>
-            <button class="filter-btn" data-category="pasta">Pasta</button>
-        </div>
 
         <div class="menu-grid" id="menu-grid">
             <?php foreach ($menu_items as $item): ?>

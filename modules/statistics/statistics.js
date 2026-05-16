@@ -392,9 +392,9 @@
   let selectedPaymentMethod = "all";
   let selectedStatus = "all";
 
-    // ── FILTER DATE STATES ─────────────────────────────────────────────────
-let selectedDateFrom = "";
-let selectedDateTo = "";
+  // ── FILTER DATE STATES ─────────────────────────────────────────────────
+  let selectedDateFrom = "";
+  let selectedDateTo = "";
 
   // ── FILTER CHIP STYLE ──────────────────────────────────────────────────
   function activateChip(chip) {
@@ -568,10 +568,10 @@ let selectedDateTo = "";
               gap:10px;
             ">
 
-<input
-  type="date"
-  id="filter-date-from"
-  value="${selectedDateFrom}"
+              <input
+                type="date"
+                id="filter-date-from"
+                value="${selectedDateFrom}"
                 style="
                   flex:1;
                   height:40px;
@@ -591,10 +591,10 @@ let selectedDateTo = "";
                 to
               </span>
 
-<input
-  type="date"
-  id="filter-date-to"
-  value="${selectedDateTo}"
+              <input
+                type="date"
+                id="filter-date-to"
+                value="${selectedDateTo}"
                 style="
                   flex:1;
                   height:40px;
@@ -889,34 +889,14 @@ let selectedDateTo = "";
           transition:0.15s ease;
         `;
 
-        const group =
-          chip.dataset.group;
-
-        const value =
-          chip.dataset.value;
+        const group = chip.dataset.group;
+        const value = chip.dataset.value;
 
         let active = false;
 
-        if (
-          group === "order-type" &&
-          value === selectedOrderType
-        ) {
-          active = true;
-        }
-
-        if (
-          group === "payment" &&
-          value === selectedPaymentMethod
-        ) {
-          active = true;
-        }
-
-        if (
-          group === "status" &&
-          value === selectedStatus
-        ) {
-          active = true;
-        }
+        if (group === "order-type" && value === selectedOrderType) active = true;
+        if (group === "payment"    && value === selectedPaymentMethod) active = true;
+        if (group === "status"     && value === selectedStatus) active = true;
 
         if (active) {
           activateChip(chip);
@@ -924,187 +904,178 @@ let selectedDateTo = "";
           deactivateChip(chip);
         }
 
-        chip.addEventListener(
-          "click",
-          () => {
-            document
-              .querySelectorAll(
-                `.filter-chip[data-group="${group}"]`
-              )
-              .forEach((c) => {
-                deactivateChip(c);
-              });
+        chip.addEventListener("click", () => {
+          document
+            .querySelectorAll(`.filter-chip[data-group="${group}"]`)
+            .forEach((c) => { deactivateChip(c); });
 
-            activateChip(chip);
+          activateChip(chip);
 
-            if (group === "order-type") {
-              selectedOrderType =
-                value;
-            }
-
-            if (group === "payment") {
-              selectedPaymentMethod =
-                value;
-            }
-
-            if (group === "status") {
-              selectedStatus =
-                value;
-            }
-          }
-        );
+          if (group === "order-type") selectedOrderType     = value;
+          if (group === "payment")    selectedPaymentMethod = value;
+          if (group === "status")     selectedStatus        = value;
+        });
       });
   };
 
-  // ── CLOSE FILTER MODAL ────────────────────────────────────────────────
-  window.closeFilterModal =
-    function () {
-      const modal =
-        document.getElementById(
-          "filter-modal-overlay"
-        );
-
-      if (modal) {
-        modal.remove();
-      }
-    };
+  // ── CLOSE FILTER MODAL ─────────────────────────────────────────────────
+  window.closeFilterModal = function () {
+    const modal = document.getElementById("filter-modal-overlay");
+    if (modal) modal.remove();
+  };
 
   // ── APPLY FILTER ───────────────────────────────────────────────────────
   window.applyFilter = function () {
-    const from =
-      document.getElementById(
-        "filter-date-from"
-      )?.value || "";
+    const from = document.getElementById("filter-date-from")?.value || "";
+    const to   = document.getElementById("filter-date-to")?.value   || "";
 
-    const to =
-      document.getElementById(
-        "filter-date-to"
-      )?.value || "";
+    selectedDateFrom = from;
+    selectedDateTo   = to;
 
-      
-selectedDateFrom = from;
-selectedDateTo = to;
-
-    const rows =
-      document.querySelectorAll(
-        "#orders-table tbody tr"
-      );
-
-    rows.forEach((row) => {
+    // Mark each row as filtered or not
+    getAllTableRows().forEach((row) => {
       let show = true;
 
-      const dateCell = row.cells[1];
-      const orderTypeCell =
-        row.cells[2];
-      const paymentCell =
-        row.cells[3];
-const statusCell = row.cells[5];
+      const dateCell      = row.cells[1];
+      const orderTypeCell = row.cells[2];
+      const paymentCell   = row.cells[3];
+      const statusCell    = row.cells[5];
 
       if (dateCell) {
-        const rawText =
-          dateCell.textContent.trim();
-
-const parsed = Date.parse(rawText);
-const rowDate = isNaN(parsed) ? null : new Date(parsed);
-
-        if (!isNaN(rowDate)) {
-          const rowDateOnly =
-            rowDate
-              .toISOString()
-              .split("T")[0];
-
-          if (
-            from &&
-            rowDateOnly < from
-          ) {
-            show = false;
-          }
-
-          if (
-            to &&
-            rowDateOnly > to
-          ) {
-            show = false;
-          }
+        const parsed  = Date.parse(dateCell.textContent.trim());
+        const rowDate = isNaN(parsed) ? null : new Date(parsed);
+        if (rowDate) {
+          const rowDateOnly = rowDate.toISOString().split("T")[0];
+          if (from && rowDateOnly < from) show = false;
+          if (to   && rowDateOnly > to)   show = false;
         }
       }
 
-      if (
-        selectedOrderType !== "all" &&
-        orderTypeCell
-      ) {
-        const txt =
-          orderTypeCell.textContent
-            .trim()
-            .toLowerCase();
-
-        if (
-          txt !== selectedOrderType
-        ) {
-          show = false;
-        }
+      if (selectedOrderType !== "all" && orderTypeCell) {
+        if (orderTypeCell.textContent.trim().toLowerCase() !== selectedOrderType) show = false;
       }
 
-      if (
-        selectedPaymentMethod !==
-          "all" &&
-        paymentCell
-      ) {
-        const txt =
-          paymentCell.textContent
-            .trim()
-            .toLowerCase();
-
-        if (
-          txt !==
-          selectedPaymentMethod
-        ) {
-          show = false;
-        }
+      if (selectedPaymentMethod !== "all" && paymentCell) {
+        if (paymentCell.textContent.trim().toLowerCase() !== selectedPaymentMethod) show = false;
       }
 
-      if (
-        selectedStatus !== "all" &&
-        statusCell
-      ) {
-        const txt =
-          statusCell.textContent
-            .trim()
-            .toLowerCase();
-
-        if (txt !== selectedStatus) {
-          show = false;
-        }
+      if (selectedStatus !== "all" && statusCell) {
+        if (statusCell.textContent.trim().toLowerCase() !== selectedStatus) show = false;
       }
 
-      row.style.display = show
-        ? ""
-        : "none";
+      row.dataset.filtered = show ? "1" : "0";
     });
 
+    renderTablePage(1);
     closeFilterModal();
   };
 
+  // ── CLEAR FILTER ───────────────────────────────────────────────────────
+  window.clearFilter = function () {
+    selectedOrderType     = "all";
+    selectedPaymentMethod = "all";
+    selectedStatus        = "all";
+    selectedDateFrom      = "";
+    selectedDateTo        = "";
 
-// ── CLEAR FILTER ───────────────────────────────────────────────────────
-window.clearFilter = function () {
-  selectedOrderType = "all";
-  selectedPaymentMethod = "all";
-  selectedStatus = "all";
+    getAllTableRows().forEach((r) => { r.dataset.filtered = "1"; });
+    renderTablePage(1);
+    closeFilterModal();
+  };
 
-  selectedDateFrom = "";
-  selectedDateTo = "";
+  // ══════════════════════════════════════════════════════════════════════
+  //  TABLE PAGINATION — 10 rows per page
+  // ══════════════════════════════════════════════════════════════════════
+  const TABLE_PER_PAGE = 10;
+  let tablePage = 1;
 
-  document
-    .querySelectorAll(
-      "#orders-table tbody tr"
-    )
-    .forEach((r) => {
-      r.style.display = "";
+  function getAllTableRows() {
+    return Array.from(
+      document.querySelectorAll("#orders-table tbody tr")
+    ).filter((r) => !r.querySelector(".table-empty"));
+  }
+
+  function renderTablePage(page) {
+    tablePage = page;
+
+    const allRows      = getAllTableRows();
+    const filteredRows = allRows.filter((r) => r.dataset.filtered !== "0");
+    const totalPages   = Math.max(1, Math.ceil(filteredRows.length / TABLE_PER_PAGE));
+
+    if (tablePage > totalPages) tablePage = totalPages;
+
+    const start = (tablePage - 1) * TABLE_PER_PAGE;
+    const end   = start + TABLE_PER_PAGE;
+
+    // Hide all first
+    allRows.forEach((r) => (r.style.display = "none"));
+
+    // Show current page slice of filtered rows
+    filteredRows.forEach((r, i) => {
+      r.style.display = (i >= start && i < end) ? "" : "none";
     });
 
-  closeFilterModal();
-};
+    renderTablePagination(tablePage, totalPages, filteredRows.length);
+  }
+
+  function renderTablePagination(page, totalPages, total) {
+    // Find or create pagination container below the table wrap
+    let container = document.getElementById("orders-table-pagination");
+    if (!container) {
+      container    = document.createElement("div");
+      container.id = "orders-table-pagination";
+      container.className = "table-pagination";
+      const wrap = document.querySelector(".orders-list-wrap");
+      if (wrap) wrap.appendChild(container);
+    }
+
+    if (totalPages <= 1) {
+      container.innerHTML = "";
+      return;
+    }
+
+    const prevDisabled = page === 1          ? "disabled" : "";
+    const nextDisabled = page === totalPages  ? "disabled" : "";
+
+    // Build page number buttons — show window of 5 around current
+    const delta = 2;
+    let pageNums = [];
+    for (let i = Math.max(1, page - delta); i <= Math.min(totalPages, page + delta); i++) {
+      pageNums.push(i);
+    }
+
+    let btnHTML = "";
+    if (pageNums[0] > 1) {
+      btnHTML += `<button class="tpg-btn" data-p="1">1</button>`;
+      if (pageNums[0] > 2) btnHTML += `<span class="tpg-ellipsis">…</span>`;
+    }
+    pageNums.forEach((p) => {
+      btnHTML += `<button class="tpg-btn ${p === page ? "tpg-btn--active" : ""}" data-p="${p}">${p}</button>`;
+    });
+    if (pageNums[pageNums.length - 1] < totalPages) {
+      if (pageNums[pageNums.length - 1] < totalPages - 1) btnHTML += `<span class="tpg-ellipsis">…</span>`;
+      btnHTML += `<button class="tpg-btn" data-p="${totalPages}">${totalPages}</button>`;
+    }
+
+    const showing = total === 0
+      ? "No orders found"
+      : `Showing ${(page - 1) * TABLE_PER_PAGE + 1}–${Math.min(page * TABLE_PER_PAGE, total)} of ${total} orders`;
+
+    container.innerHTML = `
+      <div class="tpg-info">${showing}</div>
+      <div class="tpg-controls">
+        <button class="tpg-arrow" id="tpg-prev" ${prevDisabled}>&#8592;</button>
+        ${btnHTML}
+        <button class="tpg-arrow" id="tpg-next" ${nextDisabled}>&#8594;</button>
+      </div>
+    `;
+
+    container.querySelector("#tpg-prev")?.addEventListener("click", () => renderTablePage(tablePage - 1));
+    container.querySelector("#tpg-next")?.addEventListener("click", () => renderTablePage(tablePage + 1));
+    container.querySelectorAll(".tpg-btn").forEach((b) =>
+      b.addEventListener("click", () => renderTablePage(parseInt(b.dataset.p)))
+    );
+  }
 
   // ── SIDEBAR TREE ───────────────────────────────────────────────────────
   window.toggleYear = function (yr) {
@@ -1539,6 +1510,11 @@ window.clearFilter = function () {
       "logout-btn"
     );
 
+  const excelBtn =
+    document.getElementById(
+      "excel-btn"
+    );
+
   if (profileBtn && dropdown) {
     profileBtn.addEventListener(
       "click",
@@ -1567,6 +1543,15 @@ window.clearFilter = function () {
         window.location.href =
           logoutBtn.dataset
             .logoutUrl;
+      }
+    );
+  }
+
+  if (excelBtn) {
+    excelBtn.addEventListener(
+      "click",
+      () => {
+        alert("Excel export coming soon!");
       }
     );
   }
@@ -1657,139 +1642,166 @@ window.clearFilter = function () {
   renderSectionBarChart();
   initAnnualClick();
 
-  /* ── ORDER OVERVIEW MODAL ───────────────────────────── */
-
-window.openOrderModal = function(orderData) {
-
-  if (document.getElementById("order-modal-overlay")) return;
-
-  const overlay = document.createElement("div");
-  overlay.className = "order-modal-overlay";
-  overlay.id = "order-modal-overlay";
-
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) closeOrderModal();
+  // ── INIT TABLE PAGINATION ──────────────────────────────────────────────
+  // Mark all rows as visible by default then paginate
+  getAllTableRows().forEach((r) => {
+    r.dataset.filtered = "1";
   });
+  renderTablePage(1);
 
-  const itemsHTML = (orderData.items || []).map(item => `
-    <div class="order-item">
-      <span>${item.qty}x ${item.name}</span>
-      <span>₱${Number(item.price).toLocaleString()}</span>
-    </div>
-  `).join("");
+  // ══════════════════════════════════════════════════════════════════════
+  //  ORDER OVERVIEW MODAL
+  //  Matches served page: reads data-discount & data-subtotal from row
+  // ══════════════════════════════════════════════════════════════════════
 
-  overlay.innerHTML = `
-    <div class="order-modal">
+  window.openOrderModal = function (orderData) {
+    if (document.getElementById("order-modal-overlay")) return;
 
-      <div class="order-modal-top">
-        <div class="order-number">#${orderData.id}</div>
-        <div class="order-date">${orderData.date}</div>
-        <div class="order-title">Order Overview</div>
+    const overlay = document.createElement("div");
+    overlay.className = "order-modal-overlay";
+    overlay.id        = "order-modal-overlay";
 
-        <div class="order-badges">
-          <div class="badge badge-served">${orderData.status}</div>
-          <div class="badge badge-dinein">${orderData.type}</div>
-        </div>
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) closeOrderModal();
+    });
+
+    // Items list — price × qty like served page
+    const itemsHTML = (orderData.items || []).map((item) => `
+      <div class="order-item">
+        <span>${item.qty}x ${item.name}</span>
+        <span>Php ${Number(item.price * item.qty).toLocaleString("en-PH", { minimumFractionDigits: 0 })}</span>
       </div>
+    `).join("");
 
-      <div class="order-divider"></div>
-
-      <div class="order-items">
-        ${itemsHTML}
+    // Discount row — only show if discount > 0, matching served page logic
+    const discountAmt = parseFloat(orderData.discount) || 0;
+    const discountRow = discountAmt > 0 ? `
+      <div class="summary-row">
+        <span>Discount</span>
+        <span class="served-discount" style="color:#2e6b40;">−Php ${Number(discountAmt).toLocaleString("en-PH", { minimumFractionDigits: 0 })}</span>
       </div>
+    ` : "";
 
-      <div class="order-divider"></div>
+    // Served-at footer line — only show if different from ordered_at
+    const footerLine = orderData.served_at && orderData.served_at !== orderData.ordered_at
+      ? `Ordered: ${orderData.ordered_at} &nbsp;·&nbsp; Served: ${orderData.served_at}`
+      : `Ordered: ${orderData.ordered_at}`;
 
-      <div class="order-summary">
+    overlay.innerHTML = `
+      <div class="order-modal">
 
-        <div class="summary-row">
-          <span>Mode of Payment</span>
-          <span>${orderData.payment}</span>
+        <div class="order-modal-top">
+          <div class="order-number">#${orderData.id}</div>
+          <div class="order-date">${orderData.date}</div>
+          <div class="order-title">Order Overview</div>
+
+          <div class="order-badges">
+            <div class="badge badge-served">${orderData.status}</div>
+            <div class="badge badge-dinein">${orderData.type}</div>
+          </div>
         </div>
 
-        <div class="summary-row">
-          <span>Subtotal</span>
-          <span>₱${orderData.subtotal}</span>
+        <div class="order-divider"></div>
+
+        <div class="order-items">
+          ${itemsHTML || '<p style="color:#aaa;font-size:13px;text-align:center;">No items found</p>'}
         </div>
 
-        <div class="summary-row">
-          <span>Discount</span>
-          <span>${orderData.discount || "-"}</span>
+        <div class="order-divider"></div>
+
+        <div class="order-summary">
+
+          <div class="summary-row">
+            <span>Mode of Payment</span>
+            <span>${orderData.payment || "—"}</span>
+          </div>
+
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <span>Php ${Number(orderData.subtotal).toLocaleString("en-PH", { minimumFractionDigits: 0 })}</span>
+          </div>
+
+          ${discountRow}
+
+          <div class="summary-total">
+            <span>Total</span>
+            <span class="total-amount">Php ${Number(orderData.total).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          </div>
+
         </div>
 
-        <div class="summary-total">
-          <span>Total</span>
-          <span class="total-amount">₱${orderData.total}</span>
+        <div class="order-footer">
+          ${footerLine}
+        </div>
+
+        <div class="order-close-wrap">
+          <button class="order-close-btn" onclick="closeOrderModal()">Close</button>
         </div>
 
       </div>
+    `;
 
-      <div class="order-footer">
-        Ordered on ${orderData.ordered_at} • Served on ${orderData.served_at}
-      </div>
-
-      <div class="order-close-wrap">
-        <button class="order-close-btn" onclick="closeOrderModal()">Close</button>
-      </div>
-
-    </div>
-  `;
-
-  document.body.appendChild(overlay);
-};
-
-window.closeOrderModal = function() {
-  const modal = document.getElementById("order-modal-overlay");
-  if (modal) modal.remove();
-};
-
-
-/* ── AUTO ATTACH TO TABLE ROWS ───────────────────────── */
-
-document.querySelectorAll("#orders-table tbody tr").forEach(row => {
-
-  row.style.cursor = "pointer";
-
-row.addEventListener("click", () => {
-let items = [];
-
-try {
-  const raw = row.getAttribute("data-items");
-
-  if (raw) {
-    const parsed = JSON.parse(raw);
-
-    if (Array.isArray(parsed)) {
-      items = parsed.map(i => ({
-        qty: i.qty,
-        name: i.name,
-        price: i.price
-      }));
-    }
-  }
-
-} catch (e) {
-  console.error("Invalid JSON:", e);
-}
-
-  const orderData = {
-    id: row.cells[0]?.textContent.trim() || "—",
-    date: row.cells[1]?.textContent.trim() || "",
-    type: row.cells[2]?.textContent.trim() || "",
-    payment: row.cells[3]?.textContent.trim() || "",
-    total: (row.cells[4]?.textContent || "0").replace(/[₱,]/g, ""),
-    status: row.cells[5]?.textContent.trim() || "",
-
-    subtotal: row.cells[4]?.textContent.replace("₱","") || "0",
-
-    ordered_at: row.cells[1]?.textContent.trim(),
-    served_at: row.cells[1]?.textContent.trim(),
-
-    items: items
+    document.body.appendChild(overlay);
   };
 
-  openOrderModal(orderData);
-});
+  window.closeOrderModal = function () {
+    const modal = document.getElementById("order-modal-overlay");
+    if (modal) modal.remove();
+  };
 
-});
+  // ── AUTO ATTACH TO TABLE ROWS ──────────────────────────────────────────
+  document.querySelectorAll("#orders-table tbody tr").forEach((row) => {
+    // Skip empty-state rows
+    if (row.querySelector(".table-empty")) return;
+
+    row.style.cursor = "pointer";
+
+    row.addEventListener("click", () => {
+      // Parse items JSON
+      let items = [];
+      try {
+        const raw = row.getAttribute("data-items");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            items = parsed.map((i) => ({
+              qty:   i.qty,
+              name:  i.name,
+              price: i.price,
+            }));
+          }
+        }
+      } catch (e) {
+        console.error("Invalid JSON:", e);
+      }
+
+      // Read discount & subtotal from PHP data attributes
+      const discountVal  = parseFloat(row.getAttribute("data-discount") || "0");
+      const subtotalVal  = parseFloat(row.getAttribute("data-subtotal") || "0");
+      const servedAt     = row.getAttribute("data-served-at") || "";
+
+      const beeperNumber = row.cells[0]?.textContent.trim() || "—";
+      const dateText     = row.cells[1]?.textContent.trim() || "";
+      const typeText     = row.cells[2]?.textContent.trim() || "";
+      const paymentText  = row.cells[3]?.textContent.trim() || "";
+      const totalText    = parseFloat((row.cells[4]?.textContent || "0").replace(/[₱,\s]/g, ""));
+      const statusText   = row.cells[5]?.textContent.trim() || "";
+
+      openOrderModal({
+        id:         beeperNumber,
+        date:       dateText,
+        type:       typeText,
+        payment:    paymentText,
+        status:     statusText,
+        items:      items,
+        // If subtotal not in data attr, derive it (total + discount)
+        subtotal:   subtotalVal || (totalText + discountVal),
+        discount:   discountVal,
+        total:      totalText,
+        ordered_at: dateText,
+        served_at:  servedAt,
+      });
+    });
+  });
+
 })();

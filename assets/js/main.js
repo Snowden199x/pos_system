@@ -16,6 +16,7 @@
         const m = String(now.getMinutes()).padStart(2, '0');
         const ampm = h >= 12 ? 'PM' : 'AM';
         h = h % 12 || 12;
+
         dayEl.textContent  = DAYS[now.getDay()];
         dateEl.textContent = `${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()} at ${h}:${m} ${ampm}`;
     }
@@ -23,9 +24,11 @@
     updateDateTime();
     setInterval(updateDateTime, 30000);
 
+
     // ── Toast (usable by ALL screens) ─────────
     window.showToast = function (msg, type = 'success') {
         let toast = document.getElementById('pos-toast');
+
         if (!toast) {
             toast = document.createElement('div');
             toast.id = 'pos-toast';
@@ -39,10 +42,12 @@
             `;
             document.body.appendChild(toast);
         }
+
         toast.style.background = type === 'error' ? '#c0392b' : '#2D6A4F';
         toast.textContent = msg;
         toast.style.opacity = '1';
         toast.style.transform = 'translateX(-50%) translateY(0)';
+
         clearTimeout(toast._timer);
         toast._timer = setTimeout(() => {
             toast.style.opacity = '0';
@@ -50,11 +55,45 @@
         }, 3500);
     };
 
+
     // ── Shared Helpers ────────────────────────
     window.escHtml = function (str) {
         const d = document.createElement('div');
         d.appendChild(document.createTextNode(str));
         return d.innerHTML;
     };
+
+
+    // ── Profile Dropdown ──────────────────────
+    const profileBtn = document.getElementById('profile-btn');
+    const profileMenu = document.getElementById('profile-menu');
+    const dropdown = document.getElementById('profile-dropdown');
+
+    if (profileBtn && dropdown && profileMenu) {
+
+        // Toggle dropdown
+        profileBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            dropdown.classList.toggle('active');
+        });
+
+        // Close when clicking outside
+        document.addEventListener('click', function (e) {
+            if (!profileMenu.contains(e.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+
+    }
+
+
+    // ── Excel Button (optional placeholder) ───
+    const excelBtn = document.getElementById('excel-btn');
+
+    if (excelBtn) {
+        excelBtn.addEventListener('click', function () {
+            showToast("Excel export coming soon!");
+        });
+    }
 
 })();

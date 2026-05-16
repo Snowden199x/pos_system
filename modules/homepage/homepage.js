@@ -77,13 +77,10 @@
     setInterval(updateClock, 1000);
 
     // ── Discount Calculation ───────────────────────────────────────────────
-    // Uses exact per-item fixed discount map (floor of 20%)
-    // DISCOUNT_MAP is defined in homepage.php via <script> tag
     function getItemDiscount(price) {
         if (typeof DISCOUNT_MAP !== 'undefined' && DISCOUNT_MAP[price] !== undefined) {
             return DISCOUNT_MAP[price];
         }
-        // Fallback: floor(price * 0.20)
         return Math.floor(price * 0.20);
     }
 
@@ -96,7 +93,6 @@
         });
 
         if (state.discountEnabled && state.order.length > 0) {
-            // Find the single cheapest item (lowest unit price)
             const cheapest = state.order.reduce((min, item) =>
                 item.price < min.price ? item : min, state.order[0]);
             totalDiscount = getItemDiscount(cheapest.price);
@@ -105,18 +101,6 @@
         const total = subtotal - totalDiscount;
         return { subtotal, totalDiscount, total };
     }
-
-    // ── Category Filter ────────────────────────────────────────────────────
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('filter-btn--active'));
-            btn.classList.add('filter-btn--active');
-            const cat = btn.dataset.category;
-            document.querySelectorAll('.menu-card').forEach(card => {
-                card.classList.toggle('hidden', cat !== 'all' && card.dataset.category !== cat);
-            });
-        });
-    });
 
     // ── Add to Order ───────────────────────────────────────────────────────
     menuGrid.addEventListener('click', e => {
@@ -136,7 +120,6 @@
 
         renderOrder();
 
-        // Brief highlight
         card.style.borderColor = 'var(--green-100)';
         card.style.transform   = 'scale(0.97)';
         setTimeout(() => {
@@ -147,7 +130,6 @@
 
     // ── Render Order ───────────────────────────────────────────────────────
     function renderOrder() {
-        // Remove existing order items (keep empty state element)
         orderList.querySelectorAll('.order-item').forEach(el => el.remove());
 
         if (state.order.length === 0) {
@@ -165,7 +147,6 @@
         row.className = 'order-item';
         row.dataset.id = item.id;
 
-        // Only show discount on the cheapest item
         const cheapest = state.order.length > 0
             ? state.order.reduce((min, o) => o.price < min.price ? o : min, state.order[0])
             : null;
@@ -236,14 +217,11 @@
 
         let canPlace = hasItems;
 
-        // Beeper required
         if (!beeper || parseInt(beeper) < 1) canPlace = false;
 
-        // Cash: amount must be >= total and > 0
         if (isCash) {
             if (amount <= 0 || amount < total) canPlace = false;
         }
-        // GCash: no amount required
 
         placeOrderBtn.disabled = !canPlace;
     }
@@ -276,7 +254,7 @@
     // ── Discount Toggle ────────────────────────────────────────────────────
     discountToggle.addEventListener('change', () => {
         state.discountEnabled = discountToggle.checked;
-        renderOrder(); // re-render so per-item price updates
+        renderOrder();
     });
 
     // ── Order Type ─────────────────────────────────────────────────────────
@@ -342,7 +320,6 @@
 
         const change = isCash ? (amount - total) : 0;
 
-        // Build payload
         const payload = {
             beeper_number:  parseInt(beeper),
             order_type:     state.orderType,
@@ -379,12 +356,11 @@
             if (data.success) {
                 showToast('Order has been placed!', 'success');
 
-                // Reset
-                state.order          = [];
+                state.order           = [];
                 state.discountEnabled = false;
                 discountToggle.checked = false;
-                amountInput.value    = '';
-                beeperInput.value    = '';
+                amountInput.value     = '';
+                beeperInput.value     = '';
                 beeperWrap.classList.remove('beeper-error');
                 beeperError.classList.remove('visible');
                 changeDisplay.style.display = 'none';
@@ -404,7 +380,6 @@
 
     // ── Toast ──────────────────────────────────────────────────────────────
     function showToast(message, type = 'success') {
-        // Use main.js if available
         if (typeof window.showToast === 'function') {
             window.showToast(message, type);
             return;
