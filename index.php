@@ -22,6 +22,7 @@ if (isset($_SESSION["logged_in"])) {
     elseif ($page === 'orders') include 'modules/orders/orders.php';
     elseif ($page === 'served') include 'modules/served/served.php';
     elseif ($page === 'statistics') include 'modules/statistics/statistics.php';
+    elseif ($page === 'profile') include 'modules/profile/profile.php';
     else include 'modules/homepage/homepage.php';
     exit();
 }

@@ -13,19 +13,16 @@ date_default_timezone_set('Asia/Manila');
 
 $now = new DateTime();
 
-// compute last Monday 2AM
 $lastReset = new DateTime();
 $lastReset->modify('monday this week');
 $lastReset->setTime(2, 0, 0);
 
-// kung di pa umaabot ng Monday 2AM ngayon
 if ($now < $lastReset) {
     $lastReset->modify('-7 days');
 }
 
 $reset_datetime = $lastReset->format('Y-m-d H:i:s');
 
-// ✅ TAMANG QUERY (prepare lang, walang query())
 $stmt = $pdo->prepare("
     SELECT o.*, 
            GROUP_CONCAT(oi.name ORDER BY oi.id SEPARATOR '||') AS item_names,
@@ -56,7 +53,9 @@ $served_orders = $stmt->fetchAll();
 <body>
 
 <header class="navbar">
-    <img src="<?= $base_url ?>assets/images/logo.png" class="navbar__logo-img" alt="Twist & Roll">
+    <a href="index.php?page=home" style="display:flex;align-items:center;">
+        <img src="<?= $base_url ?>assets/images/logo.png" class="navbar__logo-img" alt="Twist & Roll">
+    </a>
     <nav class="navbar__nav">
         <a href="index.php?page=home"       class="nav-link <?= $current_page==='home'       ? 'nav-link--active':'' ?>">Home</a>
         <a href="index.php?page=orders"     class="nav-link <?= $current_page==='orders'     ? 'nav-link--active':'' ?>">Orders</a>
@@ -73,6 +72,26 @@ $served_orders = $stmt->fetchAll();
                 <img src="<?= $base_url ?>assets/images/profile.png" class="profile-icon" alt="Profile">
             </button>
             <div class="profile-dropdown" id="profile-dropdown">
+
+                <!-- Excel -->
+                <button class="dropdown-item" id="excel-btn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <path d="M8 8l8 8M16 8l-8 8"/>
+                    </svg>
+                    Excel
+                </button>
+
+                <!-- Profile -->
+                <a href="index.php?page=profile" class="dropdown-item">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="7" r="4"/>
+                        <path d="M5.5 21a6.5 6.5 0 0 1 13 0"/>
+                    </svg>
+                    Profile
+                </a>
+
+                <!-- Logout -->
                 <button class="logout-btn" id="logout-btn" data-logout-url="index.php?logout=1">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -81,6 +100,7 @@ $served_orders = $stmt->fetchAll();
                     </svg>
                     Logout
                 </button>
+
             </div>
         </div>
     </div>
@@ -91,8 +111,8 @@ $served_orders = $stmt->fetchAll();
     <div class="served-title">Served</div>
 
     <div style="font-size:12px; color:#777; margin-bottom:10px;">
-    Showing served orders since <?= date('M d, Y h:i A', strtotime($reset_datetime)) ?>
-</div>
+        Showing served orders since <?= date('M d, Y h:i A', strtotime($reset_datetime)) ?>
+    </div>
 
     <div class="served-controls">
         <div class="served-search-wrapper">
@@ -188,7 +208,6 @@ $served_orders = $stmt->fetchAll();
 
     </div>
 
-    <!-- PAGINATION -->
     <div class="pagination" id="pagination"></div>
 </div>
 

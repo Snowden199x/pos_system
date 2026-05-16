@@ -20,8 +20,7 @@ $months_list = [
     9=>'September',10=>'October',11=>'November',12=>'December'
 ];
 
-// Year range: 2026–2036 (always show, even if no data)
-$year_range = range(2026, 2036); // descending
+$year_range = range(2026, 2036);
 
 // ── DASHBOARD DATA ─────────────────────────────────────────────────────────
 $today = date('Y-m-d');
@@ -57,7 +56,7 @@ $monthly_trend_stmt = $pdo->prepare("SELECT MONTH(created_at) as mo, COALESCE(SU
 $monthly_trend_stmt->execute([$selected_year]);
 $monthly_trend = $monthly_trend_stmt->fetchAll();
 
-// ── SIDEBAR DATA (per selected year only) ─────────────────────────────────
+// ── SIDEBAR DATA ──────────────────────────────────────────────────────────
 $annual_stmt = $pdo->prepare("SELECT MONTH(created_at) as mo, COALESCE(SUM(total),0) as total, COUNT(*) as orders, COUNT(CASE WHEN status='served' THEN 1 END) as served FROM orders WHERE YEAR(created_at)=? AND status IN ('pending','served') GROUP BY MONTH(created_at) ORDER BY mo");
 $annual_stmt->execute([$selected_year]);
 $annual_raw = $annual_stmt->fetchAll();
@@ -68,7 +67,6 @@ $annual_total_stmt = $pdo->prepare("SELECT COALESCE(SUM(total),0) as t FROM orde
 $annual_total_stmt->execute([$selected_year]);
 $annual_total = $annual_total_stmt->fetchColumn();
 
-// Voids count per month
 $voids_stmt = $pdo->prepare("SELECT MONTH(created_at) as mo, COUNT(*) as cnt FROM orders WHERE YEAR(created_at)=? AND status='voided' GROUP BY MONTH(created_at)");
 $voids_stmt->execute([$selected_year]);
 $voids_by_month = [];
@@ -77,19 +75,33 @@ foreach ($voids_stmt->fetchAll() as $r) $voids_by_month[$r['mo']] = $r['cnt'];
 // ── SIDEBAR SECTION DATA ───────────────────────────────────────────────────
 $section_orders = [];
 $section_stats  = [];
+$high_date      = null;
+$low_date       = null;
+$bar_data       = [];
+
 if ($sidebar_open && $selected_section) {
-    $status_filter = $selected_section === 'served' ? "'served'" : "'pending','served'";
-    if ($selected_section === 'voids') $status_filter = "'voided'";
+    $status_filter = "'pending','served'";
+    if ($selected_section === 'served') $status_filter = "'served'";
+    if ($selected_section === 'voids')  $status_filter = "'voided'";
 
     $sec_stmt = $pdo->prepare("
-        SELECT o.id, o.created_at, o.order_type, o.payment_method, o.total, o.status, o.beeper_number,
-               GROUP_CONCAT(
-  CONCAT(oi.quantity, 'x ', oi.name, '|', oi.price)
-  SEPARATOR ';;'
-) as items_data
+        SELECT
+            o.id,
+            o.beeper_number,
+            o.created_at,
+            o.served_at,
+            o.order_type,
+            o.payment_method,
+            o.subtotal,
+            o.discount,
+            o.total,
+            o.status,
+            GROUP_CONCAT(CONCAT(oi.quantity, 'x ', oi.name, '|', oi.price) SEPARATOR ';;') AS items_data
         FROM orders o
         LEFT JOIN order_items oi ON oi.order_id = o.id
-        WHERE YEAR(o.created_at)=? AND MONTH(o.created_at)=? AND o.status IN ($status_filter)
+        WHERE YEAR(o.created_at) = ?
+          AND MONTH(o.created_at) = ?
+          AND o.status IN ($status_filter)
         GROUP BY o.id
         ORDER BY o.created_at DESC
     ");
@@ -116,7 +128,7 @@ if ($sidebar_open && $selected_section) {
 $daily_json   = json_encode($daily_data);
 $weekly_json  = json_encode($weekly_raw);
 $monthly_json = json_encode($monthly_trend);
-$bar_json     = isset($bar_data) ? json_encode($bar_data) : '[]';
+$bar_json     = json_encode($bar_data);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -132,7 +144,9 @@ $bar_json     = isset($bar_data) ? json_encode($bar_data) : '[]';
 <body>
 
 <header class="navbar">
-    <img src="<?= $base_url ?>assets/images/logo.png" class="navbar__logo-img" alt="Twist & Roll">
+    <a href="index.php?page=home" style="display:flex;align-items:center;">
+        <img src="<?= $base_url ?>assets/images/logo.png" class="navbar__logo-img" alt="Twist & Roll">
+    </a>
     <nav class="navbar__nav">
         <a href="index.php?page=home"       class="nav-link">Home</a>
         <a href="index.php?page=orders"     class="nav-link">Orders</a>
@@ -149,12 +163,35 @@ $bar_json     = isset($bar_data) ? json_encode($bar_data) : '[]';
                 <img src="<?= $base_url ?>assets/images/profile.png" class="profile-icon" alt="Profile">
             </button>
             <div class="profile-dropdown" id="profile-dropdown">
+
+                <!-- Excel -->
+                <button class="dropdown-item" id="excel-btn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <path d="M8 8l8 8M16 8l-8 8"/>
+                    </svg>
+                    Excel
+                </button>
+
+                <!-- Profile -->
+                <a href="index.php?page=profile" class="dropdown-item">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="7" r="4"/>
+                        <path d="M5.5 21a6.5 6.5 0 0 1 13 0"/>
+                    </svg>
+                    Profile
+                </a>
+
+                <!-- Logout -->
                 <button class="logout-btn" id="logout-btn" data-logout-url="index.php?logout=1">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
                     </svg>
                     Logout
                 </button>
+
             </div>
         </div>
     </div>
@@ -162,9 +199,8 @@ $bar_json     = isset($bar_data) ? json_encode($bar_data) : '[]';
 
 <div class="stats-wrapper">
 
-    <!-- ── SIDEBAR ──────────────────────────────────────────────────────── -->
+    <!-- ── SIDEBAR ── -->
     <aside class="stats-sidebar <?= $sidebar_open ? 'stats-sidebar--open' : '' ?>" id="stats-sidebar">
-
         <div class="sidebar-header">
             <button class="sidebar-toggle" id="sidebar-toggle"
                 onclick="<?= $sidebar_open ? 'location.href=\'?page=statistics&year='.$selected_year.'\'' : 'closeSidebar()' ?>">
@@ -176,8 +212,6 @@ $bar_json     = isset($bar_data) ? json_encode($bar_data) : '[]';
         </div>
 
         <div class="sidebar-tree">
-
-            <!-- Year Dropdown -->
             <div class="year-nav">
                 <span class="folder-icon">📁</span>
                 <select class="year-select"
@@ -185,14 +219,11 @@ $bar_json     = isset($bar_data) ? json_encode($bar_data) : '[]';
                     onfocus="this.size=4;"
                     onblur="this.size=1;">
                     <?php foreach ($year_range as $yr): ?>
-                    <option value="<?= $yr ?>" <?= $yr == $selected_year ? 'selected' : '' ?>>
-                        <?= $yr ?>
-                    </option>
+                    <option value="<?= $yr ?>" <?= $yr == $selected_year ? 'selected' : '' ?>><?= $yr ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
 
-            <!-- Months of selected year only -->
             <div class="tree-months">
                 <?php foreach ($months_list as $num => $name): ?>
                 <div class="tree-month">
@@ -229,16 +260,14 @@ $bar_json     = isset($bar_data) ? json_encode($bar_data) : '[]';
                     <span class="tree-count tree-count--annual">₱<?= number_format($annual_total, 0) ?></span>
                 </div>
             </div>
-
         </div>
     </aside>
 
-    <!-- ── MAIN CONTENT ──────────────────────────────────────────────────── -->
+    <!-- ── MAIN CONTENT ── -->
     <main class="stats-main" id="stats-main">
 
         <?php if ($sidebar_open && $selected_section): ?>
 
-        <!-- Breadcrumb -->
         <div class="breadcrumb">
             <span class="breadcrumb__folder">📁 <?= $selected_year ?></span>
             <span class="breadcrumb__sep">›</span>
@@ -322,50 +351,47 @@ $bar_json     = isset($bar_data) ? json_encode($bar_data) : '[]';
                                 <th>Status</th>
                             </tr>
                         </thead>
-                  <tbody>
-<?php if (empty($section_orders)): ?>
-<tr>
-    <td colspan="6" class="table-empty">No records found.</td>
-</tr>
+                        <tbody>
+                        <?php if (empty($section_orders)): ?>
+                        <tr><td colspan="6" class="table-empty">No records found.</td></tr>
+                        <?php else: ?>
+                        <?php foreach ($section_orders as $o):
+                            $items = [];
+                            if (!empty($o['items_data'])) {
+                                foreach (explode(';;', $o['items_data']) as $item) {
+                                    $parts = explode('|', $item, 2);
+                                    if (count($parts) < 2) continue;
+                                    [$left, $price] = $parts;
+                                    $xPos = strpos($left, 'x ');
+                                    if ($xPos === false) continue;
+                                    $qty  = (int)substr($left, 0, $xPos);
+                                    $name = substr($left, $xPos + 2);
+                                    $items[] = ['qty' => $qty, 'name' => trim($name), 'price' => (float)$price];
+                                }
+                            }
 
-<?php else: ?>
-<?php foreach ($section_orders as $o): ?>
-
-<?php
-$items = [];
-
-if (!empty($o['items_data'])) {
-    $rawItems = explode(';;', $o['items_data']);
-
-    foreach ($rawItems as $item) {
-        list($left, $price) = explode('|', $item);
-        list($qty, $name) = explode('x ', $left);
-
-        $items[] = [
-            "qty" => (int)$qty,
-            "name" => $name,
-            "price" => (float)$price
-        ];
-    }
-}
-?>
-
-<tr data-items='<?= htmlspecialchars(json_encode($items), ENT_QUOTES, 'UTF-8') ?>'>
-    <td><?= $o['beeper_number'] ?></td>
-    <td><?= date('M j, Y g:i A', strtotime($o['created_at'])) ?></td>
-    <td><?= $o['order_type'] === 'dine-in' ? 'Dine in' : 'Take out' ?></td>
-    <td><?= ucfirst($o['payment_method']) ?></td>
-    <td>₱<?= number_format($o['total'], 0) ?></td>
-    <td>
-        <span class="status-badge status-<?= $o['status'] ?>">
-            <?= ucfirst($o['status']) ?>
-        </span>
-    </td>
-</tr>
-
-<?php endforeach; ?>
-<?php endif; ?>
-</tbody>
+                            $discount  = (float)($o['discount']  ?? 0);
+                            $subtotal  = (float)($o['subtotal']  ?? $o['total']);
+                            $served_at = !empty($o['served_at'])
+                                ? date('M j, Y g:i A', strtotime($o['served_at']))
+                                : '';
+                        ?>
+                        <tr
+                            data-items='<?= htmlspecialchars(json_encode($items), ENT_QUOTES, 'UTF-8') ?>'
+                            data-discount="<?= $discount ?>"
+                            data-subtotal="<?= $subtotal ?>"
+                            data-served-at="<?= htmlspecialchars($served_at, ENT_QUOTES, 'UTF-8') ?>"
+                        >
+                            <td><?= (int)$o['beeper_number'] ?></td>
+                            <td><?= date('M j, Y g:i A', strtotime($o['created_at'])) ?></td>
+                            <td><?= $o['order_type'] === 'dine-in' ? 'Dine in' : 'Take out' ?></td>
+                            <td><?= ucfirst($o['payment_method']) ?></td>
+                            <td>₱<?= number_format($o['total'], 0) ?></td>
+                            <td><span class="status-badge status-<?= $o['status'] ?>"><?= ucfirst($o['status']) ?></span></td>
+                        </tr>
+                        <?php endforeach; ?>
+                        <?php endif; ?>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -373,10 +399,11 @@ if (!empty($o['items_data'])) {
 
         <?php else: ?>
 
-        <!-- Header with hamburger -->
         <div class="dash-header">
             <button class="sidebar-toggle-btn" id="open-sidebar" onclick="openSidebar()">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
             </button>
             <h1 class="dash-title">Statistics</h1>
         </div>
@@ -385,30 +412,30 @@ if (!empty($o['items_data'])) {
             <p class="overview-label">Daily Sales Overview</p>
             <div class="overview-cards">
                 <div class="overview-card">
-                    <div class="ov-icon ov-icon--green">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                    <div class="ov-icon-wrap">
+                        <img src="<?= $base_url ?>assets/images/sales_icon.png" alt="Sales" class="ov-icon-img">
                     </div>
-                    <div>
+                    <div class="ov-text">
                         <div class="ov-label">Total Sales per Day</div>
                         <div class="ov-value">₱<?= number_format($today_data['s'], 0) ?></div>
                         <div class="ov-sub"><?= date('M j, Y') ?></div>
                     </div>
                 </div>
                 <div class="overview-card">
-                    <div class="ov-icon ov-icon--gold">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                    <div class="ov-icon-wrap">
+                        <img src="<?= $base_url ?>assets/images/orders_icon.png" alt="Orders" class="ov-icon-img">
                     </div>
-                    <div>
+                    <div class="ov-text">
                         <div class="ov-label">Number of Orders per Day</div>
                         <div class="ov-value"><?= $today_data['c'] ?></div>
                         <div class="ov-sub"><?= date('M j, Y') ?></div>
                     </div>
                 </div>
                 <div class="overview-card">
-                    <div class="ov-icon ov-icon--blue">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    <div class="ov-icon-wrap">
+                        <img src="<?= $base_url ?>assets/images/monthsales_icon.png" alt="Month Sales" class="ov-icon-img">
                     </div>
-                    <div>
+                    <div class="ov-text">
                         <div class="ov-label">Total Sales this Month</div>
                         <div class="ov-value">₱<?= number_format($monthly['total_sales'], 0) ?></div>
                         <div class="ov-sub"><?= $months_list[$selected_month] ?> <?= $selected_year ?></div>
@@ -419,7 +446,10 @@ if (!empty($o['items_data'])) {
 
         <div class="dash-row">
             <div class="dash-box">
-                <div class="dash-box__header"><h3>🏆 Best Selling Menu (Top 3)</h3></div>
+                <div class="dash-box__header">
+                    <img src="<?= $base_url ?>assets/images/best_icon.png" alt="Best" class="dash-box__header-icon">
+                    <h3>Best Selling Menu</h3>
+                </div>
                 <div class="rank-list">
                     <?php if (empty($best_items)): ?>
                     <p class="no-data">No data yet.</p>
@@ -447,7 +477,10 @@ if (!empty($o['items_data'])) {
             </div>
 
             <div class="dash-box">
-                <div class="dash-box__header"><h3>😔 Least Selling Menu (Top 3)</h3></div>
+                <div class="dash-box__header">
+                    <img src="<?= $base_url ?>assets/images/least_icon.png" alt="Least" class="dash-box__header-icon">
+                    <h3>Least Selling Menu</h3>
+                </div>
                 <div class="rank-list">
                     <?php if (empty($least_items)): ?>
                     <p class="no-data">No data yet.</p>
@@ -494,7 +527,7 @@ if (!empty($o['items_data'])) {
                     <option value="monthly">Monthly</option>
                 </select>
             </div>
-            <canvas id="barChart" height="110"></canvas>
+            <canvas id="barChart" height="80"></canvas>
         </div>
 
         <?php endif; ?>
@@ -507,14 +540,12 @@ if (!empty($o['items_data'])) {
     const WEEKLY_DATA  = <?= $weekly_json ?>;
     const MONTHLY_DATA = <?= $monthly_json ?>;
     const BAR_DATA     = <?= $bar_json ?>;
-    const SIDEBAR_OPEN = <?= $sidebar_open ? 'true' : 'false' ?>;
+    const SIDEBAR_OPEN   = <?= $sidebar_open ? 'true' : 'false' ?>;
     const SELECTED_YEAR  = <?= $selected_year ?>;
     const SELECTED_MONTH = <?= $selected_month ?>;
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="<?= $base_url ?>modules/statistics/statistics.js"></script>
-
-
 
 </body>
 </html>

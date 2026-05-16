@@ -177,45 +177,8 @@ body {
     margin-bottom: 14px;
 }
 
-.category-filters {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 18px;
-    flex-wrap: wrap;
-}
-
-.filter-btn {
-    padding: 5px 18px;
-    border-radius: var(--radius-pill);
-    border: 1.5px solid var(--gold-100);
-    background: var(--cream);
-    color: var(--green-100);
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.18s ease;
-    font-family: 'Poppins', sans-serif;
-}
-
-.filter-btn:hover {
-    border-color: var(--green-100);
-    color: var(--green-100);
-}
-
-.filter-btn--active {
-    background: var(--green-100);
-    color: var(--cream);
-    border-color: var(--green-100);
-}
-
-.filter-btn--active:hover {
-    background: #152c1c;
-    border-color: #152c1c;
-    color: var(--cream);
-}
-
 /* =============================================
-   MENU GRID — always 3 per row on desktop
+   MENU GRID
    ============================================= */
 .menu-grid {
     display: grid;
@@ -299,10 +262,8 @@ body {
     font-weight: 600;
 }
 
-
-
 /* =============================================
-   ORDER PANEL (RIGHT) — floating card
+   ORDER PANEL (RIGHT)
    ============================================= */
 .order-panel {
     background: var(--cream);
@@ -436,7 +397,6 @@ body {
     flex-shrink: 0;
 }
 
-/* Only order-items-list scrolls */
 .order-items-list {
     display: flex;
     flex-direction: column;
@@ -861,6 +821,27 @@ body {
     background: #fde8e8;
 }
 
+.dropdown-item {
+    width: 100%;
+    padding: 11px 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13.5px;
+    text-align: left;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.dropdown-item:hover {
+    background: #f5f5f5;
+}
+
 /* =============================================
    TOAST
    ============================================= */
@@ -901,12 +882,6 @@ body {
    RESPONSIVE
    ============================================= */
 
-
-
-/* Medium desktop — 3 cols */
-
-
-/* Stacked layout on tablet/mobile */
 @media (max-width: 860px) {
     .menu-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
 
@@ -952,7 +927,6 @@ body {
     .order-items-list { max-height: 180px; }
 }
 
-/* Tablet nav — collapses navbar */
 @media (max-width: 700px) {
     .navbar {
         flex-wrap: wrap;
@@ -989,7 +963,6 @@ body {
     .order-panel { padding: 16px; }
 }
 
-/* Mobile — 2 cols */
 @media (max-width: 540px) {
     .menu-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .menu-card__name { font-size: 14px; }
@@ -1004,17 +977,11 @@ body {
     .menu-card__name { font-size: 12px; }
 }
 
-/* =============================================
-   EXTRA RESPONSIVE FIXES
-   ============================================= */
-
-/* Phones */
 @media (max-width: 600px) {
-
-body {
-    overflow-x: auto;
-    overflow-y: hidden;
-}
+    body {
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
 
     .navbar {
         padding: 10px;
@@ -1045,10 +1012,10 @@ body {
         grid-template-columns: 1fr;
     }
 
-   .menu-card {
-    min-height: 220px;
-    aspect-ratio: auto;
-}
+    .menu-card {
+        min-height: 220px;
+        aspect-ratio: auto;
+    }
 
     .menu-card__image-wrap {
         height: 160px;
@@ -1076,9 +1043,7 @@ body {
     }
 }
 
-/* Small phones */
 @media (max-width: 400px) {
-
     .navbar__logo-img {
         height: 40px;
     }
@@ -1106,23 +1071,19 @@ body {
     }
 }
 
-
 @media (max-width: 1400px) {
-
     .pos-layout {
         grid-template-columns: minmax(0, 1fr) 380px;
     }
 }
 
 @media (max-width: 1200px) {
-
     .pos-layout {
         grid-template-columns: minmax(0, 1fr) 340px;
     }
 }
 
 @media (max-width: 1000px) {
-
     .pos-layout {
         grid-template-columns: minmax(0, 1fr) 300px;
     }
